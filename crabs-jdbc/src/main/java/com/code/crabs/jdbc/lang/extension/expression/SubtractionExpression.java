@@ -1,7 +1,7 @@
 package com.code.crabs.jdbc.lang.extension.expression;
 
 import com.code.crabs.core.DataType;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 import com.code.crabs.jdbc.lang.Expression;
 import com.code.crabs.jdbc.lang.expression.NonAggregation;
 
@@ -19,7 +19,7 @@ public final class SubtractionExpression extends NonAggregation {
     }
 
     @Override
-    public final DataType getResultType() throws crabsException {
+    public final DataType getResultType() throws SQL4ESException {
         final DataType dataType1 = this.getOperandExpression(0).getResultType();
         final DataType dataType2 = this.getOperandExpression(1).getResultType();
         if (dataType1 == DataType.DOUBLE || dataType2 == DataType.DOUBLE) {

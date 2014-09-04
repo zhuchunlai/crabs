@@ -1,7 +1,7 @@
 package com.code.crabs.jdbc.lang.extension.expression;
 
 import com.code.crabs.core.DataType;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 import com.code.crabs.jdbc.lang.Expression;
 import com.code.crabs.jdbc.lang.expression.Aggregation;
 import com.code.crabs.jdbc.lang.expression.Function;
@@ -10,7 +10,7 @@ public final class MaxinumFunction extends Aggregation implements Function {
 
     public static final String IDENTIFIER = "MAX";
 
-    public MaxinumFunction(final Expression expression) throws crabsException {
+    public MaxinumFunction(final Expression expression) throws SQL4ESException {
         super(expression);
     }
 
@@ -25,7 +25,7 @@ public final class MaxinumFunction extends Aggregation implements Function {
     }
 
     @Override
-    public final DataType getResultType() throws crabsException {
+    public final DataType getResultType() throws SQL4ESException {
         return DataType.DOUBLE;
     }
 }

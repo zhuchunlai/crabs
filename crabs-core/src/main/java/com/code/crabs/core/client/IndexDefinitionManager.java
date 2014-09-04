@@ -7,7 +7,7 @@ import com.code.crabs.core.client.AdvancedClient.InternalClusterRequestBuilder;
 import com.code.crabs.core.client.AdvancedClient.InternalIndicesRequestBuilder;
 import com.code.crabs.core.exception.IndexAlreadyExistsException;
 import com.code.crabs.core.exception.IndexNotExistsException;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateAction;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequestBuilder;
@@ -54,7 +54,7 @@ final class IndexDefinitionManager {
         this.advancedClient = advancedClient;
     }
 
-    final void createIndex(final IndexDefinition indexDefinition) throws crabsException {
+    final void createIndex(final IndexDefinition indexDefinition) throws SQL4ESException {
         final class InternalIndicesRequestBuilder$CreateIndex implements
                 InternalIndicesRequestBuilder<CreateIndexRequest, CreateIndexResponse, CreateIndexRequestBuilder, CreateIndexAction, IndexDefinition> {
             @Override
@@ -64,7 +64,7 @@ final class IndexDefinitionManager {
 
             @Override
             public final CreateIndexRequest buildRequest(final IndicesAdminClient adminClient,
-                                                         final IndexDefinition indexDefinition) throws crabsException {
+                                                         final IndexDefinition indexDefinition) throws SQL4ESException {
                 final CreateIndexRequestBuilder builder = new CreateIndexRequestBuilder(adminClient, indexDefinition.getIdentifier().toString());
                 XContentBuilder settings;
                 try {
@@ -74,7 +74,7 @@ final class IndexDefinitionManager {
                             .field(FIELD_INDEX_REPLICAS_NUM, indexDefinition.getReplicasNum())
                             .endObject();
                 } catch (IOException e) {
-                    throw new crabsException(e);
+                    throw new SQL4ESException(e);
                 }
                 builder.setSettings(settings);
                 return builder.request();
@@ -85,13 +85,13 @@ final class IndexDefinitionManager {
                 throw new IndexAlreadyExistsException(indexDefinition);
             }
         } catch (Exception e) {
-            throw new crabsException(e);
+            throw new SQL4ESException(e);
         }
         this.advancedClient.execute(
                 new InternalIndicesRequestBuilder$CreateIndex(),
                 new AdvancedClient.ResponseCallback<CreateIndexResponse>() {
                     @Override
-                    public final void callback(final CreateIndexResponse response) throws crabsException {
+                    public final void callback(final CreateIndexResponse response) throws SQL4ESException {
                         // nothing to do.
                     }
                 },
@@ -103,7 +103,7 @@ final class IndexDefinitionManager {
         throw new UnsupportedOperationException();
     }
 
-    final void dropIndex(final Identifier identifier) throws crabsException {
+    final void dropIndex(final Identifier identifier) throws SQL4ESException {
         final class InternalIndicesRequestBuilder$DeleteIndex implements
                 InternalIndicesRequestBuilder<DeleteIndexRequest, DeleteIndexResponse,
                         DeleteIndexRequestBuilder, DeleteIndexAction, String> {
@@ -114,7 +114,7 @@ final class IndexDefinitionManager {
 
             @Override
             public final DeleteIndexRequest buildRequest(final IndicesAdminClient adminClient,
-                                                         final String identifier) throws crabsException {
+                                                         final String identifier) throws SQL4ESException {
                 final DeleteIndexRequestBuilder builder
                         = new DeleteIndexRequestBuilder(adminClient, identifier);
                 return builder.request();
@@ -126,7 +126,7 @@ final class IndexDefinitionManager {
                     new InternalIndicesRequestBuilder$DeleteIndex(),
                     new AdvancedClient.ResponseCallback<DeleteIndexResponse>() {
                         @Override
-                        public final void callback(final DeleteIndexResponse response) throws crabsException {
+                        public final void callback(final DeleteIndexResponse response) throws SQL4ESException {
                             // nothing to do.
                         }
                     },
@@ -137,7 +137,7 @@ final class IndexDefinitionManager {
         }
     }
 
-    final ReadonlyList<IndexDefinition> getAllIndices() throws crabsException {
+    final ReadonlyList<IndexDefinition> getAllIndices() throws SQL4ESException {
         final class InternalClusterRequestBuilder$ClusterState implements
                 InternalClusterRequestBuilder<ClusterStateRequest, ClusterStateResponse, ClusterStateRequestBuilder, ClusterStateAction, Object> {
             @Override
@@ -147,7 +147,7 @@ final class IndexDefinitionManager {
 
             @Override
             public final ClusterStateRequest buildRequest(final ClusterAdminClient adminClient,
-                                                          final Object value) throws crabsException {
+                                                          final Object value) throws SQL4ESException {
                 final ClusterStateRequestBuilder builder = new ClusterStateRequestBuilder(adminClient);
                 return builder.request();
             }
@@ -157,7 +157,7 @@ final class IndexDefinitionManager {
                 new InternalClusterRequestBuilder$ClusterState(),
                 new AdvancedClient.ResponseCallback<ClusterStateResponse>() {
                     @Override
-                    public final void callback(final ClusterStateResponse response) throws crabsException {
+                    public final void callback(final ClusterStateResponse response) throws SQL4ESException {
                         final MetaData clusterMetaData = response.getState().getMetaData();
                         final ImmutableOpenMap<String, IndexMetaData> indexMetaDataMap = clusterMetaData.indices();
                         IndexMetaData indexMetaData;
@@ -178,13 +178,13 @@ final class IndexDefinitionManager {
         return ReadonlyList.newInstance(indexDefinitionList);
     }
 
-    final IndexDefinition getIndexDefinition(final Identifier indexIdentifier) throws crabsException {
+    final IndexDefinition getIndexDefinition(final Identifier indexIdentifier) throws SQL4ESException {
         try {
             if (!this.exists(indexIdentifier)) {
                 throw new IndexNotExistsException("Index[" + indexIdentifier + "] is not exists.");
             }
         } catch (Exception e) {
-            throw new crabsException(e);
+            throw new SQL4ESException(e);
         }
         final class InternalClusterRequestBuilder$ClusterState implements
                 InternalClusterRequestBuilder<ClusterStateRequest, ClusterStateResponse, ClusterStateRequestBuilder, ClusterStateAction, Identifier> {
@@ -195,7 +195,7 @@ final class IndexDefinitionManager {
 
             @Override
             public final ClusterStateRequest buildRequest(final ClusterAdminClient adminClient,
-                                                          final Identifier indexIdentifier) throws crabsException {
+                                                          final Identifier indexIdentifier) throws SQL4ESException {
                 final ClusterStateRequestBuilder builder = new ClusterStateRequestBuilder(adminClient);
                 builder.setIndices(indexIdentifier.toString());
                 return builder.request();
@@ -206,7 +206,7 @@ final class IndexDefinitionManager {
                 new InternalClusterRequestBuilder$ClusterState(),
                 new AdvancedClient.ResponseCallback<ClusterStateResponse>() {
                     @Override
-                    public final void callback(final ClusterStateResponse response) throws crabsException {
+                    public final void callback(final ClusterStateResponse response) throws SQL4ESException {
                         final MetaData clusterMetaData = response.getState().getMetaData();
                         final ImmutableOpenMap<String, IndexMetaData> indexMetaDataMap = clusterMetaData.indices();
                         IndexMetaData indexMetaData;
@@ -230,7 +230,7 @@ final class IndexDefinitionManager {
         return indexDefinitionList.get(0);
     }
 
-    final boolean exists(final Identifier indexIdentifier) throws crabsException {
+    final boolean exists(final Identifier indexIdentifier) throws SQL4ESException {
         final class InternalIndicesRequestBuilder$IndexExists implements
                 InternalIndicesRequestBuilder<IndicesExistsRequest, IndicesExistsResponse, IndicesExistsRequestBuilder, IndicesExistsAction, Identifier> {
             @Override
@@ -240,7 +240,7 @@ final class IndexDefinitionManager {
 
             @Override
             public final IndicesExistsRequest buildRequest(final IndicesAdminClient adminClient,
-                                                           final Identifier value) throws crabsException {
+                                                           final Identifier value) throws SQL4ESException {
                 IndicesExistsRequestBuilder builder = new IndicesExistsRequestBuilder(adminClient, value.toString());
                 return builder.request();
             }
@@ -253,7 +253,7 @@ final class IndexDefinitionManager {
                 new InternalIndicesRequestBuilder$IndexExists(),
                 new AdvancedClient.ResponseCallback<IndicesExistsResponse>() {
                     @Override
-                    public final void callback(final IndicesExistsResponse response) throws crabsException {
+                    public final void callback(final IndicesExistsResponse response) throws SQL4ESException {
                         result.isExists = response.isExists();
                     }
                 },

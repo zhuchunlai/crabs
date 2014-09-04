@@ -3,7 +3,7 @@ package com.code.crabs.jdbc;
 import com.code.crabs.common.Constants;
 import com.code.crabs.core.DataType;
 import com.code.crabs.core.Identifier;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 import com.code.crabs.jdbc.BaseClasses.ResultSetBase;
 import com.code.crabs.jdbc.internal.InternalResultSet;
 import com.code.crabs.jdbc.internal.InternalResultSet.InternalMetaData;
@@ -97,7 +97,7 @@ public final class ResultSet extends ResultSetBase {
                 this.rowIndex = null;
                 return false;
             }
-        } catch (crabsException ex) {
+        } catch (SQL4ESException ex) {
             throw new SQLException(ex.getMessage(), ex);
         }
     }

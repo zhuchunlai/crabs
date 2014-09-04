@@ -2,7 +2,7 @@ package com.code.crabs.jdbc.internal;
 
 import com.code.crabs.core.DataType;
 import com.code.crabs.core.Identifier;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -31,7 +31,7 @@ public abstract class InternalResultSet implements Closeable {
 
     public abstract Object getColumnValue(int columnIndex);
 
-    public abstract boolean next() throws crabsException;
+    public abstract boolean next() throws SQL4ESException;
 
     @Override
     public abstract void close() throws IOException;

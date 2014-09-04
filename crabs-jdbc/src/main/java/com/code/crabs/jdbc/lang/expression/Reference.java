@@ -5,7 +5,7 @@ import com.code.crabs.core.DataType;
 import com.code.crabs.core.Identifier;
 import com.code.crabs.jdbc.lang.Expression;
 import com.code.crabs.jdbc.lang.expression.context.Context;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 
 public final class Reference extends Expression {
 
@@ -99,12 +99,12 @@ public final class Reference extends Expression {
     }
 
     @Override
-    public final DataType getResultType() throws crabsException {
+    public final DataType getResultType() throws SQL4ESException {
         return null;
     }
 
     @Override
-    public final DataType getResultType(final Context context) throws crabsException {
+    public final DataType getResultType(final Context context) throws SQL4ESException {
         final Object value = context.getReferenceValue(this);
         return DataType.getDataType(value.getClass());
     }

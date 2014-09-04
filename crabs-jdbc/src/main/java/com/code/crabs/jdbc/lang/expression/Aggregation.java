@@ -1,12 +1,12 @@
 package com.code.crabs.jdbc.lang.expression;
 
 import com.code.crabs.common.util.ReadonlyList;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 import com.code.crabs.jdbc.lang.Expression;
 
 public abstract class Aggregation extends Expression {
 
-    protected Aggregation(final Expression... operandExpressions) throws crabsException {
+    protected Aggregation(final Expression... operandExpressions) throws SQL4ESException {
         if (operandExpressions == null) {
             throw new IllegalArgumentException("Argument[operandExpressions] is null.");
         }
@@ -26,11 +26,11 @@ public abstract class Aggregation extends Expression {
     }
 
     @Override
-    protected final ReadonlyList<Expression> doGetOperandExpressionList() throws crabsException {
+    protected final ReadonlyList<Expression> doGetOperandExpressionList() throws SQL4ESException {
         return ReadonlyList.newInstance(this.operandExpressions);
     }
 
-    private static void checkOperandExpression(final Expression operandExpression) throws crabsException {
+    private static void checkOperandExpression(final Expression operandExpression) throws SQL4ESException {
         if (operandExpression instanceof Aggregation) {
             throw new IllegalArgumentException("Aggregation can not be operand expression of aggregation.");
         } else if (operandExpression instanceof NonAggregation) {

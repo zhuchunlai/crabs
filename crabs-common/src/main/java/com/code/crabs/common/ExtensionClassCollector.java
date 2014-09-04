@@ -1,6 +1,6 @@
 package com.code.crabs.common;
 
-import com.code.crabs.exception.crabsError;
+import com.code.crabs.exception.SQL4ESError;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,7 +14,7 @@ public final class ExtensionClassCollector {
     public static final String REGISTER_FILE_PATH = "META-INF/services/";
 
     public static <TSuperClass> Iterator<Class<? extends TSuperClass>> getExtensionClasses(
-            final Class<TSuperClass> superClass) throws crabsError {
+            final Class<TSuperClass> superClass) throws SQL4ESError {
         return new LazyIterator<TSuperClass>(
                 superClass,
                 Thread.currentThread().getContextClassLoader()
@@ -22,13 +22,13 @@ public final class ExtensionClassCollector {
     }
 
     public static <TSuperClass> Iterator<Class<? extends TSuperClass>> getExtensionClasses(
-            final Class<TSuperClass> superClass, final ClassLoader loader) throws crabsError {
+            final Class<TSuperClass> superClass, final ClassLoader loader) throws SQL4ESError {
         return new LazyIterator<TSuperClass>(superClass, loader);
     }
 
     private static Iterator<String> parse(final Class<?> superClass,
                                           final URL URL,
-                                          final TreeSet<String> classNameSet) throws crabsError {
+                                          final TreeSet<String> classNameSet) throws SQL4ESError {
         final ArrayList<String> classNameList = new ArrayList<String>();
         try {
             final InputStream inputStream = URL.openStream();
@@ -48,7 +48,7 @@ public final class ExtensionClassCollector {
                 inputStream.close();
             }
         } catch (IOException exception) {
-            throw new crabsError(superClass.getName() + ": " + exception);
+            throw new SQL4ESError(superClass.getName() + ": " + exception);
         }
         return classNameList.iterator();
     }
@@ -58,12 +58,12 @@ public final class ExtensionClassCollector {
                                  final BufferedReader buffer,
                                  final int lineNumber,
                                  final ArrayList<String> classNameList,
-                                 final TreeSet<String> classNameSet) throws crabsError {
+                                 final TreeSet<String> classNameSet) throws SQL4ESError {
         String line;
         try {
             line = buffer.readLine();
         } catch (IOException exception) {
-            throw new crabsError(superClass.getName() + ": "
+            throw new SQL4ESError(superClass.getName() + ": "
                     + exception.getMessage());
         }
         if (line == null) {
@@ -77,13 +77,13 @@ public final class ExtensionClassCollector {
         final int lineLength = line.length();
         if (lineLength != 0) {
             if ((line.indexOf(' ') >= 0) || (line.indexOf('\t') >= 0)) {
-                throw new crabsError(superClass.getName() + ": "
+                throw new SQL4ESError(superClass.getName() + ": "
                         + URL.toString() + ": " + lineNumber
                         + ": Illegal configuration-file syntax");
             }
             int codePoint = line.codePointAt(0);
             if (!Character.isJavaIdentifierStart(codePoint)) {
-                throw new crabsError(superClass.getName() + ": "
+                throw new SQL4ESError(superClass.getName() + ": "
                         + URL.toString() + ": " + lineNumber
                         + ": Illegal extension-class name: " + line);
             }
@@ -92,7 +92,7 @@ public final class ExtensionClassCollector {
                 codePoint = line.codePointAt(i);
                 if (!Character.isJavaIdentifierPart(codePoint)
                         && (codePoint != '.')) {
-                    throw new crabsError(superClass.getName() + ": "
+                    throw new SQL4ESError(superClass.getName() + ": "
                             + URL.toString() + ": " + lineNumber
                             + ": Illegal extension-class name: " + line);
                 }
@@ -129,7 +129,7 @@ public final class ExtensionClassCollector {
 
         private Enumeration<URL> configurationFiles = null;
 
-        public final boolean hasNext() throws crabsError {
+        public final boolean hasNext() throws SQL4ESError {
             if (this.nextClassName != null) {
                 return true;
             }
@@ -144,7 +144,7 @@ public final class ExtensionClassCollector {
                                 .getResources(fullName);
                     }
                 } catch (IOException exception) {
-                    throw new crabsError(this.superClass.getName() + ": "
+                    throw new SQL4ESError(this.superClass.getName() + ": "
                             + exception.getMessage());
                 }
             }
@@ -164,7 +164,7 @@ public final class ExtensionClassCollector {
         }
 
         @SuppressWarnings("unchecked")
-        public final Class<? extends TSuperClass> next() throws crabsError {
+        public final Class<? extends TSuperClass> next() throws SQL4ESError {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
@@ -174,13 +174,13 @@ public final class ExtensionClassCollector {
             try {
                 clazz = Class.forName(className, true, this.classLoader);
             } catch (ClassNotFoundException exception) {
-                throw new crabsError(this.superClass.getName() + ": "
+                throw new SQL4ESError(this.superClass.getName() + ": "
                         + "Extension " + className + " not found");
             }
             if (this.superClass.isAssignableFrom(clazz)) {
                 return (Class<? extends TSuperClass>) clazz;
             } else {
-                throw new crabsError(this.superClass.getName() + ": "
+                throw new SQL4ESError(this.superClass.getName() + ": "
                         + "Extension " + className
                         + " is not a subclass for superclass. ");
             }

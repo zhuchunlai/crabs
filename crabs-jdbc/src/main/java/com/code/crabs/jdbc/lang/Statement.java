@@ -1,7 +1,7 @@
 package com.code.crabs.jdbc.lang;
 
 import com.code.crabs.common.util.ReadonlyList;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 
 public abstract class Statement {
 
@@ -30,21 +30,21 @@ public abstract class Statement {
         if (this.stringValue == null) {
             try {
                 this.stringValue = this.doToString();
-            } catch (crabsException exception) {
+            } catch (SQL4ESException exception) {
                 throw new RuntimeException(exception.getMessage(), exception);
             }
         }
         return this.stringValue;
     }
 
-    public final int getParameterCount() throws crabsException {
+    public final int getParameterCount() throws SQL4ESException {
         if (this.parameterCount == null) {
             this.parameterCount = this.doGetParameterCount();
         }
         return this.parameterCount;
     }
 
-    public final ReadonlyList<Expression> getTopLevelExpressionList() throws crabsException {
+    public final ReadonlyList<Expression> getTopLevelExpressionList() throws SQL4ESException {
         if (this.topLevelExpressionList == null) {
             this.topLevelExpressionList = this.doGetTopLevelExpressionList();
         }
@@ -54,10 +54,10 @@ public abstract class Statement {
     @Override
     public abstract boolean equals(Object object);
 
-    protected abstract String doToString() throws crabsException;
+    protected abstract String doToString() throws SQL4ESException;
 
-    protected abstract int doGetParameterCount() throws crabsException;
+    protected abstract int doGetParameterCount() throws SQL4ESException;
 
-    protected abstract ReadonlyList<Expression> doGetTopLevelExpressionList() throws crabsException;
+    protected abstract ReadonlyList<Expression> doGetTopLevelExpressionList() throws SQL4ESException;
 
 }

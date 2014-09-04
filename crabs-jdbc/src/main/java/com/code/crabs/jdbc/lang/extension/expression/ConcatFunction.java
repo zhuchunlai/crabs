@@ -2,7 +2,7 @@ package com.code.crabs.jdbc.lang.extension.expression;
 
 import com.code.crabs.common.util.ReadonlyList;
 import com.code.crabs.core.DataType;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 import com.code.crabs.jdbc.lang.Expression;
 import com.code.crabs.jdbc.lang.expression.Function;
 import com.code.crabs.jdbc.lang.expression.NonAggregation;
@@ -40,7 +40,7 @@ public final class ConcatFunction extends NonAggregation implements Function {
     }
 
     @Override
-    protected final String doToString() throws crabsException {
+    protected final String doToString() throws SQL4ESException {
         final ReadonlyList<Expression> operandExpressionList = this.getOperandExpressionList();
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(IDENTIFIER);
@@ -56,7 +56,7 @@ public final class ConcatFunction extends NonAggregation implements Function {
     }
 
     @Override
-    public final DataType getResultType() throws crabsException {
+    public final DataType getResultType() throws SQL4ESException {
         return DataType.STRING;
     }
 }

@@ -6,7 +6,7 @@ import com.code.crabs.core.IndexDefinition;
 import com.code.crabs.core.TypeDefinition;
 import com.code.crabs.core.client.AdvancedClient;
 import com.code.crabs.jdbc.Protocol;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -84,7 +84,7 @@ public final class ExecuteEnvironment implements Closeable {
 
     private IndexDefinition indexDefinition;
 
-    public final IndexDefinition getIndexDefinition() throws crabsException {
+    public final IndexDefinition getIndexDefinition() throws SQL4ESException {
         if (this.indexDefinition == null) {
             synchronized (this) {
                 if (this.indexDefinition == null) {
@@ -95,7 +95,7 @@ public final class ExecuteEnvironment implements Closeable {
         return this.indexDefinition;
     }
 
-    public final TypeDefinition getTypeDefinition(final Identifier typeIdentifier) throws crabsException {
+    public final TypeDefinition getTypeDefinition(final Identifier typeIdentifier) throws SQL4ESException {
         TypeDefinition typeDefinition = this.typeDefinitionCache.get(typeIdentifier);
         if (typeDefinition == null) {
             synchronized (this) {

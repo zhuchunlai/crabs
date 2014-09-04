@@ -5,7 +5,7 @@ import com.code.crabs.common.util.StringUtils;
 import com.code.crabs.core.Identifier;
 import com.code.crabs.core.IndexDefinition;
 import com.code.crabs.core.TypeDefinition;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 import org.elasticsearch.action.Action;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionRequestBuilder;
@@ -83,39 +83,39 @@ public final class AdvancedClient implements Closeable {
         return properties;
     }
 
-    public final void createIndex(final IndexDefinition indexDefinition) throws crabsException {
+    public final void createIndex(final IndexDefinition indexDefinition) throws SQL4ESException {
         if (indexDefinition == null) {
             throw new IllegalArgumentException("Argument[indexDefinition] is null.");
         }
         this.indexDefinitionManager.createIndex(indexDefinition);
     }
 
-    public final void dropIndex(final Identifier identifier) throws crabsException {
+    public final void dropIndex(final Identifier identifier) throws SQL4ESException {
         if (identifier == null) {
             throw new IllegalArgumentException("Argument[identifier] is null.");
         }
         this.indexDefinitionManager.dropIndex(identifier);
     }
 
-    public final boolean existsIndex(final Identifier identifier) throws crabsException {
+    public final boolean existsIndex(final Identifier identifier) throws SQL4ESException {
         if (identifier == null) {
             throw new IllegalArgumentException("Argument[identifier] is null.");
         }
         return this.indexDefinitionManager.exists(identifier);
     }
 
-    public final IndexDefinition getIndexDefinition(final Identifier identifier) throws crabsException {
+    public final IndexDefinition getIndexDefinition(final Identifier identifier) throws SQL4ESException {
         if (identifier == null) {
             throw new IllegalArgumentException("Argument[identifier] is null.");
         }
         return this.indexDefinitionManager.getIndexDefinition(identifier);
     }
 
-    public final ReadonlyList<IndexDefinition> getAllIndices() throws crabsException {
+    public final ReadonlyList<IndexDefinition> getAllIndices() throws SQL4ESException {
         return this.indexDefinitionManager.getAllIndices();
     }
 
-    public final void createType(final TypeDefinition typeDefinition) throws crabsException {
+    public final void createType(final TypeDefinition typeDefinition) throws SQL4ESException {
         if (typeDefinition == null) {
             throw new IllegalArgumentException("Argument[typeDefinition] is null.");
         }
@@ -123,7 +123,7 @@ public final class AdvancedClient implements Closeable {
     }
 
     public final void dropType(final Identifier indexIdentifier,
-                               final Identifier typeIdentifier) throws crabsException {
+                               final Identifier typeIdentifier) throws SQL4ESException {
         if (indexIdentifier == null) {
             throw new IllegalArgumentException("Argument[indexIdentifier] is null.");
         }
@@ -137,7 +137,7 @@ public final class AdvancedClient implements Closeable {
         this.typeDefinitionManager.dropType(typeDefinition);
     }
 
-    public final void dropType(final TypeDefinition typeDefinition) throws crabsException {
+    public final void dropType(final TypeDefinition typeDefinition) throws SQL4ESException {
         if (typeDefinition == null) {
             throw new IllegalArgumentException("Argument[typeDefinition] is null.");
         }
@@ -145,7 +145,7 @@ public final class AdvancedClient implements Closeable {
     }
 
     public final boolean existsType(final Identifier indexIdentifier,
-                                    final Identifier typeIdentifier) throws crabsException {
+                                    final Identifier typeIdentifier) throws SQL4ESException {
         if (indexIdentifier == null) {
             throw new IllegalArgumentException("Argument[indexIdentifier] is null.");
         }
@@ -159,7 +159,7 @@ public final class AdvancedClient implements Closeable {
         return this.typeDefinitionManager.exists(typeDefinition);
     }
 
-    public final boolean existsType(final TypeDefinition typeDefinition) throws crabsException {
+    public final boolean existsType(final TypeDefinition typeDefinition) throws SQL4ESException {
         if (typeDefinition == null) {
             throw new IllegalArgumentException("Argument[typeDefinition] is null.");
         }
@@ -167,7 +167,7 @@ public final class AdvancedClient implements Closeable {
     }
 
     public final TypeDefinition getTypeDefinition(final Identifier indexIdentifier,
-                                                  final Identifier typeIdentifier) throws crabsException {
+                                                  final Identifier typeIdentifier) throws SQL4ESException {
         if (indexIdentifier == null) {
             throw new IllegalArgumentException("Argument[indexIdentifier] is null.");
         }
@@ -179,7 +179,7 @@ public final class AdvancedClient implements Closeable {
     }
 
     public final TypeDefinition getTypeDefinition(final IndexDefinition indexDefinition,
-                                                  final Identifier typeIdentifier) throws crabsException {
+                                                  final Identifier typeIdentifier) throws SQL4ESException {
         if (indexDefinition == null) {
             throw new IllegalArgumentException("Argument[indexDefinition] is null.");
         }
@@ -190,7 +190,7 @@ public final class AdvancedClient implements Closeable {
     }
 
     public final ReadonlyList<TypeDefinition> getTypeDefinitions(
-            final Identifier indexIdentifier) throws crabsException {
+            final Identifier indexIdentifier) throws SQL4ESException {
         if (indexIdentifier == null) {
             throw new IllegalArgumentException("Argument[indexIdentifier] is null.");
         }
@@ -202,7 +202,7 @@ public final class AdvancedClient implements Closeable {
             Builder extends ActionRequestBuilder<Request, Response, Builder>,
             TAction extends Action<Request, Response, Builder>, V> void execute(final InternalDocumentRequestBuilder<Request, Response, Builder, TAction, V> internalDocumentRequestBuilder,
                                                                                 final ResponseCallback<Response> callback,
-                                                                                final V value) throws crabsException {
+                                                                                final V value) throws SQL4ESException {
         final Response response = this.physicalClient.execute(
                 internalDocumentRequestBuilder.buildAction(),
                 internalDocumentRequestBuilder.buildRequest(this.physicalClient, value)
@@ -215,7 +215,7 @@ public final class AdvancedClient implements Closeable {
             Builder extends ActionRequestBuilder<Request, Response, Builder>,
             Action extends IndicesAction<Request, Response, Builder>, V> void execute(final InternalIndicesRequestBuilder<Request, Response, Builder, Action, V> internalIndicesRequestBuilder,
                                                                                       final ResponseCallback<Response> callback,
-                                                                                      final V value) throws crabsException {
+                                                                                      final V value) throws SQL4ESException {
         final IndicesAdminClient adminClient = this.physicalClient.admin().indices();
         final Response response = adminClient.execute(
                 internalIndicesRequestBuilder.buildAction(),
@@ -229,7 +229,7 @@ public final class AdvancedClient implements Closeable {
             Builder extends ActionRequestBuilder<Request, Response, Builder>,
             Action extends ClusterAction<Request, Response, Builder>, V> void execute(final InternalClusterRequestBuilder<Request, Response, Builder, Action, V> abstractIndicesRequestBuilder,
                                                                                       final ResponseCallback<Response> callback,
-                                                                                      final V value) throws crabsException {
+                                                                                      final V value) throws SQL4ESException {
         final ClusterAdminClient adminClient = this.physicalClient.admin().cluster();
         final Response response = adminClient.execute(
                 abstractIndicesRequestBuilder.buildAction(),
@@ -325,7 +325,7 @@ public final class AdvancedClient implements Closeable {
 
         TAction buildAction();
 
-        Request buildRequest(Client client, V value) throws crabsException;
+        Request buildRequest(Client client, V value) throws SQL4ESException;
 
     }
 
@@ -335,7 +335,7 @@ public final class AdvancedClient implements Closeable {
 
         Action buildAction();
 
-        Request buildRequest(IndicesAdminClient adminClient, V value) throws crabsException;
+        Request buildRequest(IndicesAdminClient adminClient, V value) throws SQL4ESException;
     }
 
     public interface InternalClusterRequestBuilder<Request extends ActionRequest, Response extends ActionResponse,
@@ -344,12 +344,12 @@ public final class AdvancedClient implements Closeable {
 
         Action buildAction();
 
-        Request buildRequest(ClusterAdminClient adminClient, V value) throws crabsException;
+        Request buildRequest(ClusterAdminClient adminClient, V value) throws SQL4ESException;
     }
 
 
     public interface ResponseCallback<T extends ActionResponse> {
-        void callback(T response) throws crabsException;
+        void callback(T response) throws SQL4ESException;
     }
 
 }

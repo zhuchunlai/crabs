@@ -8,7 +8,7 @@ import com.code.crabs.core.IndexDefinition;
 import com.code.crabs.core.TypeDefinition;
 import com.code.crabs.core.client.AdvancedClient.InternalIndicesRequestBuilder;
 import com.code.crabs.core.exception.*;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsAction;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequestBuilder;
@@ -55,7 +55,7 @@ final class TypeDefinitionManager {
         this.advancedClient = advancedClient;
     }
 
-    final void createType(final TypeDefinition typeDefinition) throws crabsException {
+    final void createType(final TypeDefinition typeDefinition) throws SQL4ESException {
         final class InternalIndicesRequestBuilder$CreateType implements
                 InternalIndicesRequestBuilder<PutMappingRequest, PutMappingResponse, PutMappingRequestBuilder, PutMappingAction, TypeDefinition> {
             @Override
@@ -65,7 +65,7 @@ final class TypeDefinitionManager {
 
             @Override
             public final PutMappingRequest buildRequest(final IndicesAdminClient adminClient,
-                                                        final TypeDefinition typeDefinition) throws crabsException {
+                                                        final TypeDefinition typeDefinition) throws SQL4ESException {
                 final PutMappingRequestBuilder builder = new PutMappingRequestBuilder(adminClient);
                 builder.setIndices(typeDefinition.getIndexDefinition().getIdentifier().toString());
                 builder.setType(typeDefinition.getIdentifier().toString());
@@ -96,7 +96,7 @@ final class TypeDefinitionManager {
                     contentBuilder.endObject();
                     contentBuilder.endObject();
                 } catch (IOException e) {
-                    throw new crabsException(e);
+                    throw new SQL4ESException(e);
                 }
                 try {
                     System.out.println(contentBuilder.string());
@@ -115,16 +115,16 @@ final class TypeDefinitionManager {
                     new InternalIndicesRequestBuilder$CreateType(),
                     new AdvancedClient.ResponseCallback<PutMappingResponse>() {
                         @Override
-                        public final void callback(final PutMappingResponse response) throws crabsException {
+                        public final void callback(final PutMappingResponse response) throws SQL4ESException {
                             // nothing to do.
                         }
                     },
                     typeDefinition
             );
         } catch (IndexMissingException e) {
-            throw new crabsException(new IndexNotExistsException(typeDefinition.getIndexDefinition()));
+            throw new SQL4ESException(new IndexNotExistsException(typeDefinition.getIndexDefinition()));
         } catch (Exception e) {
-            throw new crabsException(e);
+            throw new SQL4ESException(e);
         }
     }
 
@@ -132,7 +132,7 @@ final class TypeDefinitionManager {
         throw new UnsupportedOperationException();
     }
 
-    final void dropType(final TypeDefinition typeDefinition) throws crabsException {
+    final void dropType(final TypeDefinition typeDefinition) throws SQL4ESException {
         final class InternalIndicesRequestBuilder$DeleteType implements
                 InternalIndicesRequestBuilder<DeleteMappingRequest, DeleteMappingResponse, DeleteMappingRequestBuilder, DeleteMappingAction, TypeDefinition> {
 
@@ -143,7 +143,7 @@ final class TypeDefinitionManager {
 
             @Override
             public final DeleteMappingRequest buildRequest(final IndicesAdminClient adminClient,
-                                                           final TypeDefinition typeDefinition) throws crabsException {
+                                                           final TypeDefinition typeDefinition) throws SQL4ESException {
                 final DeleteMappingRequestBuilder builder = new DeleteMappingRequestBuilder(adminClient);
                 builder.setIndices(typeDefinition.getIndexDefinition().getIdentifier().toString());
                 builder.setType(typeDefinition.getIdentifier().toString());
@@ -155,7 +155,7 @@ final class TypeDefinitionManager {
                     new InternalIndicesRequestBuilder$DeleteType(),
                     new AdvancedClient.ResponseCallback<DeleteMappingResponse>() {
                         @Override
-                        public void callback(DeleteMappingResponse response) throws crabsException {
+                        public void callback(DeleteMappingResponse response) throws SQL4ESException {
                             // nothing to do.
                         }
                     },
@@ -168,7 +168,7 @@ final class TypeDefinitionManager {
         }
     }
 
-    final ReadonlyList<TypeDefinition> getTypeDefinitions(final Identifier indexIdentifier) throws crabsException {
+    final ReadonlyList<TypeDefinition> getTypeDefinitions(final Identifier indexIdentifier) throws SQL4ESException {
         final class InternalIndicesRequestBuilder$GetMappings implements
                 InternalIndicesRequestBuilder<GetMappingsRequest, GetMappingsResponse, GetMappingsRequestBuilder, GetMappingsAction, Identifier> {
 
@@ -179,7 +179,7 @@ final class TypeDefinitionManager {
 
             @Override
             public final GetMappingsRequest buildRequest(final IndicesAdminClient adminClient,
-                                                         final Identifier indexIdentifier) throws crabsException {
+                                                         final Identifier indexIdentifier) throws SQL4ESException {
                 final GetMappingsRequestBuilder builder = new GetMappingsRequestBuilder(
                         (InternalGenericClient) adminClient,
                         indexIdentifier.toString()
@@ -195,7 +195,7 @@ final class TypeDefinitionManager {
                     new InternalIndicesRequestBuilder$GetMappings(),
                     new AdvancedClient.ResponseCallback<GetMappingsResponse>() {
                         @Override
-                        public final void callback(final GetMappingsResponse response) throws crabsException {
+                        public final void callback(final GetMappingsResponse response) throws SQL4ESException {
                             final ImmutableOpenMap<String, MappingMetaData> typeMappingMetaDataMap
                                     = response.mappings().get(indexIdentifier.toString());
                             MappingMetaData mappingMetaData;
@@ -209,7 +209,7 @@ final class TypeDefinitionManager {
                                 try {
                                     source = mappingMetaData.sourceAsMap();
                                 } catch (IOException e) {
-                                    throw new crabsException(e);
+                                    throw new SQL4ESException(e);
                                 }
                                 if (source.containsKey("_all")) {
                                     @SuppressWarnings("unchecked")
@@ -251,7 +251,7 @@ final class TypeDefinitionManager {
                                     if (dataType == DataType.DATE) {
                                         final Object formatValue = fieldProperties.get("format");
                                         if (formatValue == null) {
-                                            throw new crabsException(
+                                            throw new SQL4ESException(
                                                     new FormatPatternNotFoundException(
                                                             "There's no format mapping for field[" +
                                                                     fieldName + "] in type[" +
@@ -288,7 +288,7 @@ final class TypeDefinitionManager {
     }
 
     final TypeDefinition getTypeDefinition(final IndexDefinition indexDefinition,
-                                           final Identifier typeIdentifier) throws crabsException {
+                                           final Identifier typeIdentifier) throws SQL4ESException {
         final class InternalIndicesRequestBuilder$GetMapping implements
                 InternalIndicesRequestBuilder<GetMappingsRequest, GetMappingsResponse,
                         GetMappingsRequestBuilder, GetMappingsAction, String> {
@@ -300,7 +300,7 @@ final class TypeDefinitionManager {
 
             @Override
             public final GetMappingsRequest buildRequest(final IndicesAdminClient adminClient,
-                                                         final String indexIdentifier) throws crabsException {
+                                                         final String indexIdentifier) throws SQL4ESException {
                 final GetMappingsRequestBuilder builder = new GetMappingsRequestBuilder(
                         (InternalGenericClient) adminClient,
                         indexIdentifier
@@ -316,7 +316,7 @@ final class TypeDefinitionManager {
                     new InternalIndicesRequestBuilder$GetMapping(),
                     new AdvancedClient.ResponseCallback<GetMappingsResponse>() {
                         @Override
-                        public final void callback(final GetMappingsResponse response) throws crabsException {
+                        public final void callback(final GetMappingsResponse response) throws SQL4ESException {
                             final ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> typeMappingMetaDataMap
                                     = response.mappings();
                             if (typeMappingMetaDataMap.size() == 0) {
@@ -328,7 +328,7 @@ final class TypeDefinitionManager {
                             try {
                                 source = mappingMetaData.sourceAsMap();
                             } catch (IOException e) {
-                                throw new crabsException(e);
+                                throw new SQL4ESException(e);
                             }
                             boolean allEnabled = false;
                             if (source.containsKey("_all")) {
@@ -373,7 +373,7 @@ final class TypeDefinitionManager {
                                 if (dataType == DataType.DATE) {
                                     final Object formatValue = fieldProperties.get("format");
                                     if (formatValue == null) {
-                                        throw new crabsException(
+                                        throw new SQL4ESException(
                                                 new FormatPatternNotFoundException(
                                                         "There's no format mapping for field[" +
                                                                 fieldName + "] in type[" +
@@ -410,7 +410,7 @@ final class TypeDefinitionManager {
         return typeDefinitionList.get(0);
     }
 
-    final boolean exists(final TypeDefinition typeDefinition) throws crabsException {
+    final boolean exists(final TypeDefinition typeDefinition) throws SQL4ESException {
         final class InternalIndicesRequestBuilder$TypeExists implements
                 InternalIndicesRequestBuilder<TypesExistsRequest, TypesExistsResponse,
                         TypesExistsRequestBuilder, TypesExistsAction, TypeDefinition> {
@@ -422,7 +422,7 @@ final class TypeDefinitionManager {
 
             @Override
             public final TypesExistsRequest buildRequest(final IndicesAdminClient adminClient,
-                                                         final TypeDefinition typeDefinition) throws crabsException {
+                                                         final TypeDefinition typeDefinition) throws SQL4ESException {
                 final TypesExistsRequestBuilder builder = new TypesExistsRequestBuilder(
                         adminClient,
                         typeDefinition.getIndexDefinition().getIdentifier().toString()
@@ -439,7 +439,7 @@ final class TypeDefinitionManager {
                 new InternalIndicesRequestBuilder$TypeExists(),
                 new AdvancedClient.ResponseCallback<TypesExistsResponse>() {
                     @Override
-                    public void callback(final TypesExistsResponse response) throws crabsException {
+                    public void callback(final TypesExistsResponse response) throws SQL4ESException {
                         result.exists = response.isExists();
                     }
                 },

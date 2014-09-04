@@ -24,7 +24,7 @@ import com.code.crabs.jdbc.lang.extension.clause.OrderByClause.OrderSpecificatio
 import com.code.crabs.jdbc.lang.extension.clause.SelectClause.ResultColumnDeclare;
 import com.code.crabs.jdbc.lang.extension.expression.*;
 import com.code.crabs.jdbc.lang.extension.statement.SelectStatement;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 import com.code.crabs.jdbc.internal.InternalResultSet;
 import com.code.crabs.jdbc.engine.ExecuteEnvironment;
 import com.code.crabs.jdbc.engine.StatementExecutor;
@@ -71,7 +71,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
     protected final InternalResultSet execute(final AdvancedClient advancedClient,
                                               final SelectStatement statement,
                                               final ExecuteEnvironment environment,
-                                              final Object[] argumentValues) throws crabsException {
+                                              final Object[] argumentValues) throws SQL4ESException {
         final SearchExecuteContext context = new SearchExecuteContext(statement, environment, argumentValues);
         final SelectStatementExecutePlan statementExecutePlan = SelectStatementExecutePlan.buildExecutePlan(context);
         final InternalDocumentRequestBuilder requestBuilder = statementExecutePlan.createRequestBuilder();
@@ -83,7 +83,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
     private static abstract class SelectStatementExecutePlan<RequestBuilder extends InternalDocumentRequestBuilder,
             Callback extends SearchResponseCallback> extends StatementExecutePlan {
 
-        static SelectStatementExecutePlan buildExecutePlan(final SearchExecuteContext context) throws crabsException {
+        static SelectStatementExecutePlan buildExecutePlan(final SearchExecuteContext context) throws SQL4ESException {
             for (int index = 0, size = REGISTERED_EXECUTE_PLAN_CLASSES.size(); index < size; index++) {
                 final Class<? extends SelectStatementExecutePlan> clazz = REGISTERED_EXECUTE_PLAN_CLASSES.get(index);
                 final Constructor<? extends SelectStatementExecutePlan> constructor;
@@ -97,7 +97,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 try {
                     statementExecutePlan = constructor.newInstance(context);
                 } catch (Exception e) {
-                    throw new crabsException(
+                    throw new SQL4ESException(
                             "Failed to build execute plan for sql[" + context.statement + "]",
                             e
                     );
@@ -106,7 +106,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     return statementExecutePlan;
                 }
             }
-            throw new crabsException(
+            throw new SQL4ESException(
                     "There's no proper execution plan generator for sql[" +
                             context.statement + "], maybe the sql is not supported now."
             );
@@ -135,7 +135,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
 
         private RequestBuilder requestBuilder;
 
-        public final InternalDocumentRequestBuilder createRequestBuilder() throws crabsException {
+        public final InternalDocumentRequestBuilder createRequestBuilder() throws SQL4ESException {
             if (this.requestBuilder == null) {
                 this.requestBuilder = this.doCreateRequestBuilder();
             }
@@ -144,20 +144,20 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
 
         private Callback callback;
 
-        public final Callback callback() throws crabsException {
+        public final Callback callback() throws SQL4ESException {
             if (this.callback == null) {
                 this.callback = this.doCallback();
             }
             return this.callback;
         }
 
-        protected abstract boolean accept() throws crabsException;
+        protected abstract boolean accept() throws SQL4ESException;
 
-        protected abstract RequestBuilder doCreateRequestBuilder() throws crabsException;
+        protected abstract RequestBuilder doCreateRequestBuilder() throws SQL4ESException;
 
-        protected abstract Callback doCallback() throws crabsException;
+        protected abstract Callback doCallback() throws SQL4ESException;
 
-        protected FilterBuilder buildFilterBuilder(final Expression expression) throws crabsException {
+        protected FilterBuilder buildFilterBuilder(final Expression expression) throws SQL4ESException {
             if (expression instanceof PreferentialExpression) {
                 final PreferentialExpression realExpression = ((PreferentialExpression) expression);
                 return this.buildFilterBuilder(realExpression.getOperandExpression(0));
@@ -198,7 +198,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     if (operandOne instanceof Constant) {
                         if (!(operandTwo instanceof Reference)) {
-                            throw new crabsException("Unsupported expression[" + realExpression + "]");
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandTwo);
                         final Constant constant = Constant.class.cast(operandOne);
@@ -208,7 +208,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     if (operandTwo instanceof Constant) {
                         if (!(operandOne instanceof Reference)) {
-                            throw new crabsException("Unsupported expression[" + realExpression + "]");
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandOne);
                         final Constant constant = Constant.class.cast(operandTwo);
@@ -216,7 +216,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 .rangeFilter(reference.columnIdentifier.toString())
                                 .gt(this.parseConstantValue(constant, reference));
                     }
-                    throw new crabsException("Unsupported expression[" + realExpression + "]");
+                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
 
                 } else if (expression instanceof GreaterThanOrEqualToExpression) {
                     final GreaterThanOrEqualToExpression realExpression = (GreaterThanOrEqualToExpression) expression;
@@ -234,7 +234,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     if (operandOne instanceof Constant) {
                         if (!(operandTwo instanceof Reference)) {
-                            throw new crabsException("Unsupported expression[" + realExpression + "]");
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandTwo);
                         final Constant constant = Constant.class.cast(operandOne);
@@ -244,7 +244,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     if (operandTwo instanceof Constant) {
                         if (!(operandOne instanceof Reference)) {
-                            throw new crabsException("Unsupported expression[" + realExpression + "]");
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandOne);
                         final Constant constant = Constant.class.cast(operandTwo);
@@ -252,7 +252,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 .rangeFilter(reference.columnIdentifier.toString())
                                 .gte(this.parseConstantValue(constant, reference));
                     }
-                    throw new crabsException("Unsupported expression[" + realExpression + "]");
+                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
 
                 } else if (expression instanceof LessThanExpression) {
                     final LessThanExpression realExpression = (LessThanExpression) expression;
@@ -270,7 +270,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     if (operandOne instanceof Constant) {
                         if (!(operandTwo instanceof Reference)) {
-                            throw new crabsException("Unsupported expression[" + realExpression + "]");
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandTwo);
                         final Constant constant = Constant.class.cast(operandOne);
@@ -280,7 +280,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     if (operandTwo instanceof Constant) {
                         if (!(operandOne instanceof Reference)) {
-                            throw new crabsException("Unsupported expression[" + realExpression + "]");
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandOne);
                         final Constant constant = Constant.class.cast(operandTwo);
@@ -288,7 +288,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 .rangeFilter(reference.columnIdentifier.toString())
                                 .lt(this.parseConstantValue(constant, reference));
                     }
-                    throw new crabsException("Unsupported expression[" + realExpression + "]");
+                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
 
                 } else if (expression instanceof LessThanOrEqualToExpression) {
                     final LessThanOrEqualToExpression realExpression = (LessThanOrEqualToExpression) expression;
@@ -306,7 +306,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     if (operandOne instanceof Constant) {
                         if (!(operandTwo instanceof Reference)) {
-                            throw new crabsException("Unsupported expression[" + realExpression + "]");
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandTwo);
                         final Constant constant = Constant.class.cast(operandOne);
@@ -316,7 +316,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
 
                     } else if (operandTwo instanceof Constant) {
                         if (!(operandOne instanceof Reference)) {
-                            throw new crabsException("Unsupported expression[" + realExpression + "]");
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandOne);
                         final Constant constant = Constant.class.cast(operandTwo);
@@ -324,7 +324,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 .rangeFilter(reference.columnIdentifier.toString())
                                 .lte(this.parseConstantValue(constant, reference));
                     }
-                    throw new crabsException("Unsupported expression[" + realExpression + "]");
+                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
 
                 } else if (expression instanceof EqualToExpression) {
                     final EqualToExpression realExpression = (EqualToExpression) expression;
@@ -342,7 +342,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     if (operandOne instanceof Constant) {
                         if (!(operandTwo instanceof Reference)) {
-                            throw new crabsException("Unsupported expression[" + realExpression + "]");
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandTwo);
                         final Constant constant = Constant.class.cast(operandOne);
@@ -361,7 +361,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     if (operandTwo instanceof Constant) {
                         if (!(operandOne instanceof Reference)) {
-                            throw new crabsException("Unsupported expression[" + realExpression + "]");
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandOne);
                         final Identifier columnIdentifier = reference.columnIdentifier;
@@ -379,7 +379,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             );
                         }
                     }
-                    throw new crabsException("Unsupported expression[" + realExpression + "]");
+                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
 
                 } else if (expression instanceof UnequalToExpression) {
                     final UnequalToExpression realExpression = (UnequalToExpression) expression;
@@ -397,7 +397,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     if (operandOne instanceof Constant) {
                         if (!(operandTwo instanceof Reference)) {
-                            throw new crabsException("Unsupported expression[" + realExpression + "]");
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandTwo);
                         final Identifier columnIdentifier = reference.columnIdentifier;
@@ -421,7 +421,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     if (operandTwo instanceof Constant) {
                         if (!(operandOne instanceof Reference)) {
-                            throw new crabsException("Unsupported expression[" + realExpression + "]");
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandOne);
                         final Identifier columnIdentifier = reference.columnIdentifier;
@@ -443,7 +443,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             );
                         }
                     }
-                    throw new crabsException("Unsupported expression[" + realExpression + "]");
+                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
 
                 } else if (expression instanceof BetweenExpression) {
                     final BetweenExpression realExpression = (BetweenExpression) expression;
@@ -451,7 +451,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     Expression operandTwo = realExpression.getOperandExpression(1);
                     Expression operandThree = realExpression.getOperandExpression(2);
                     if (!(operandOne instanceof Reference)) {
-                        throw new crabsException("Unsupported expression[" + operandOne +
+                        throw new SQL4ESException("Unsupported expression[" + operandOne +
                                 "] in BetweenExpression[" + realExpression + "].");
                     }
                     if (operandTwo instanceof Argument) {
@@ -465,7 +465,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         );
                     }
                     if (!(operandTwo instanceof Constant && operandThree instanceof Constant)) {
-                        throw new crabsException("Unsupported expression[" + realExpression + "]");
+                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                     }
                     final Reference reference = Reference.class.cast(operandOne);
                     final Constant constantOne = Constant.class.cast(operandTwo);
@@ -478,7 +478,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     final InExpression realExpression = InExpression.class.cast(expression);
                     Expression operandOne = realExpression.getOperandExpression(0);
                     if (!(operandOne instanceof Reference)) {
-                        throw new crabsException("Unsupported expression[" + expression +
+                        throw new SQL4ESException("Unsupported expression[" + expression +
                                 "] in InExpression[" + realExpression + "]");
                     }
                     final Reference reference = Reference.class.cast(operandOne);
@@ -498,7 +498,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                     reference
                             );
                         } else {
-                            throw new crabsException("Unsupported expression[" + operandExpression +
+                            throw new SQL4ESException("Unsupported expression[" + operandExpression +
                                     "] in InExpression[" + realExpression + "]");
                         }
                     }
@@ -520,7 +520,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     final Expression operandOne = realExpression.getOperandExpression(0);
                     Expression operandTwo = realExpression.getOperandExpression(1);
                     if (!(operandOne instanceof Reference)) {
-                        throw new crabsException("Unsupported expression[" + operandOne +
+                        throw new SQL4ESException("Unsupported expression[" + operandOne +
                                 "] in LikeExpression[" + realExpression + "]");
                     }
                     final String value;
@@ -529,7 +529,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     } else if (operandTwo instanceof Constant) {
                         value = ((Constant) operandTwo).value.toString();
                     } else {
-                        throw new crabsException("Unsupported expression[" + operandTwo +
+                        throw new SQL4ESException("Unsupported expression[" + operandTwo +
                                 "] in LikeExpression[" + realExpression + "]");
                     }
                     final char[] characters = value.toCharArray();
@@ -621,7 +621,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 ).flags(RegexpFlag.NONE);
                     }
                 } else {
-                    throw new crabsException("Unsupported expression[" + expression + "]");
+                    throw new SQL4ESException("Unsupported expression[" + expression + "]");
                 }
             }
         }
@@ -631,7 +631,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         private static long TARGET_TIME_ZONE_RAW_OFFSET = TimeZone.getTimeZone("UTC").getRawOffset();
 
         private Object parseConstantValue(final Constant constant,
-                                          final Reference reference) throws crabsException {
+                                          final Reference reference) throws SQL4ESException {
             final Identifier columnIdentifier = reference.columnIdentifier;
             final FieldDefinition columnDefinition
                     = this.context.typeDefinition.getFieldDefinition(columnIdentifier);
@@ -644,7 +644,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         try {
                             dateFormat.parse(value);
                         } catch (ParseException e) {
-                            throw new crabsException("Failed to parse constant[" +
+                            throw new SQL4ESException("Failed to parse constant[" +
                                     value + "] to date, expect its format[" +
                                     pattern + "]");
                         }
@@ -653,7 +653,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         return ((Date) constant.value).getTime()
                                 + SRC_TIME_ZONE_RAW_OFFSET - TARGET_TIME_ZONE_RAW_OFFSET;
                     default:
-                        throw new crabsException("Failed to parse constant[" +
+                        throw new SQL4ESException("Failed to parse constant[" +
                                 constant.value + "] to date, expect date or date format string[" +
                                 pattern + "]");
                 }
@@ -685,10 +685,10 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
     private static abstract class SearchResponseCallback<ResultSet extends InternalResultSet>
             implements ResponseCallback<SearchResponse> {
 
-        public abstract ResultSet getResultSet() throws crabsException;
+        public abstract ResultSet getResultSet() throws SQL4ESException;
 
         @Override
-        public abstract void callback(SearchResponse response) throws crabsException;
+        public abstract void callback(SearchResponse response) throws SQL4ESException;
     }
 
     private static class SearchExecuteContext {
@@ -713,17 +713,17 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
 
         protected SearchExecuteContext(final SelectStatement statement,
                                        final ExecuteEnvironment environment,
-                                       final Object[] argumentValues) throws crabsException {
+                                       final Object[] argumentValues) throws SQL4ESException {
             this(statement, environment, new ArgumentValues(argumentValues));
         }
 
-        protected SearchExecuteContext(final SearchExecuteContext context) throws crabsException {
+        protected SearchExecuteContext(final SearchExecuteContext context) throws SQL4ESException {
             this(context.statement, context.environment, context.argumentValues);
         }
 
         private SearchExecuteContext(final SelectStatement statement,
                                      final ExecuteEnvironment environment,
-                                     final ArgumentValues values) throws crabsException {
+                                     final ArgumentValues values) throws SQL4ESException {
             this.statement = statement;
             this.environment = environment;
             this.argumentValues = values;
@@ -736,7 +736,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
             this.indexDefinition = this.environment.getIndexDefinition();
         }
 
-        final Object argumentValue(final Argument argument) throws crabsException {
+        final Object argumentValue(final Argument argument) throws SQL4ESException {
             return this.argumentValues.argumentValue(argument);
         }
 
@@ -751,15 +751,15 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 this.argumentValueCount = values.length;
             }
 
-            final Object argumentValue(final Argument argument) throws crabsException {
+            final Object argumentValue(final Argument argument) throws SQL4ESException {
                 this.checkArgumentIndex(argument);
                 return this.values[argument.index];
             }
 
-            private void checkArgumentIndex(final Argument argument) throws crabsException {
+            private void checkArgumentIndex(final Argument argument) throws SQL4ESException {
                 final int index = argument.index;
                 if (index >= this.argumentValueCount) {
-                    throw new crabsException("There's no value assigned to the argument[" + index + "]");
+                    throw new SQL4ESException("There's no value assigned to the argument[" + index + "]");
                 }
             }
 
@@ -774,7 +774,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
 
         protected final SelectStatement statement;
 
-        protected SelectStatementSemanticAnalyzer(final Context context) throws crabsException {
+        protected SelectStatementSemanticAnalyzer(final Context context) throws SQL4ESException {
             this.context = context;
             this.statement = this.context.statement;
             // TODO 当前只考虑单表场景
@@ -783,15 +783,15 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
             try {
                 this.context.typeDefinition
                         = this.context.environment.getTypeDefinition(tableDeclare.tableIdentifier);
-            } catch (crabsException e) {
+            } catch (SQL4ESException e) {
                 final Throwable cause = e.getCause();
                 if (cause instanceof TypeNotExistsException) {
-                    throw new crabsException("Table[" + tableDeclare.tableIdentifier +
+                    throw new SQL4ESException("Table[" + tableDeclare.tableIdentifier +
                             "] is not found in Database[" +
                             this.context.indexDefinition.getIdentifier() + "]", cause);
                 }
                 if (cause instanceof IndexNotExistsException) {
-                    throw new crabsException("Database[" + this.context.indexDefinition.getIdentifier() +
+                    throw new SQL4ESException("Database[" + this.context.indexDefinition.getIdentifier() +
                             "] is not exists.", cause);
                 }
                 throw e;
@@ -800,9 +800,9 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
             this.context.tableAlias = tableDeclare.alias;
         }
 
-        public abstract void analyzeStatement() throws crabsException;
+        public abstract void analyzeStatement() throws SQL4ESException;
 
-        protected void analyzeWhereClause() throws crabsException {
+        protected void analyzeWhereClause() throws SQL4ESException {
             final WhereClause whereClause = this.statement.whereClause;
             if (whereClause == null) {
                 this.context.finallyWhereConditionExpression = null;
@@ -810,7 +810,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
             }
             final Expression originalConditionExpression = whereClause.conditionExpression;
             if (originalConditionExpression.getResultType() != DataType.BOOLEAN) {
-                throw new crabsException(
+                throw new SQL4ESException(
                         "Invalid expression in where clause, only allow boolean expression."
                 );
             }
@@ -818,16 +818,16 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     = this.analyzeExpressionInWhereClause(originalConditionExpression);
         }
 
-        private Expression analyzeExpressionInWhereClause(final Expression expression) throws crabsException {
+        private Expression analyzeExpressionInWhereClause(final Expression expression) throws SQL4ESException {
             if (expression instanceof Reference) {
                 final Reference reference = Reference.class.cast(expression);
                 if (reference.columnIdentifier.equals(Reference.ALL_COLUMN_IDENTIFIER)) {
-                    throw new crabsException("Can not contain * reference in where clause.");
+                    throw new SQL4ESException("Can not contain * reference in where clause.");
                 }
                 try {
                     this.context.typeDefinition.getFieldDefinition(reference.columnIdentifier);
                 } catch (FieldNotExistsException e) {
-                    throw new crabsException(
+                    throw new SQL4ESException(
                             "Column[" + reference.columnIdentifier + "] is not found in table[" +
                                     this.context.tableIdentifier + "]"
                     );
@@ -835,7 +835,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 if (!(reference.setIdentifier == null
                         || reference.setIdentifier.equals(this.context.tableAlias)
                         || reference.setIdentifier.equals(this.context.tableIdentifier))) {
-                    throw new crabsException(
+                    throw new SQL4ESException(
                             "Unknown data source identifier[" + reference.setIdentifier + "]"
                     );
                 }
@@ -850,9 +850,9 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     return expression;
                 }
             } else if (expression == Null.INSTANCE) {
-                throw new crabsException("Can not contain null in where clause.");
+                throw new SQL4ESException("Can not contain null in where clause.");
             } else if (expression instanceof Aggregation) {
-                throw new crabsException("Can not contain aggregation in where clause.");
+                throw new SQL4ESException("Can not contain aggregation in where clause.");
             }
             return expression;
         }
@@ -990,7 +990,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         }
 
         @Override
-        public final boolean next() throws crabsException {
+        public final boolean next() throws SQL4ESException {
             final boolean haveNext = this.searchResultSetIterator.next();
             if (haveNext) {
                 final SearchResultSetIterator searchResultSetIterator = this.searchResultSetIterator;
@@ -1019,7 +1019,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
 
     private static abstract class SearchResultSetIterator implements Closeable {
 
-        abstract boolean next() throws crabsException;
+        abstract boolean next() throws SQL4ESException;
 
         abstract int getResultValueCount();
 
@@ -1034,12 +1034,12 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
         protected NonAggregationNormalSearchExecutePlan(
-                final SearchExecuteContext context) throws crabsException {
+                final SearchExecuteContext context) throws SQL4ESException {
             super(new NonAggregationNormalSearchExecuteContext(context));
         }
 
         @Override
-        protected final boolean accept() throws crabsException {
+        protected final boolean accept() throws SQL4ESException {
             final SelectStatement statement = this.context.statement;
             final ReadonlyList<ResultColumnDeclare> resultColumnDeclareList
                     = statement.selectClause.resultColumnDeclareList;
@@ -1078,7 +1078,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         private SearchSourceBuilder searchSourceBuilder;
 
         @Override
-        protected final NonAggregationNormalSearchRequestBuilder doCreateRequestBuilder() throws crabsException {
+        protected final NonAggregationNormalSearchRequestBuilder doCreateRequestBuilder() throws SQL4ESException {
             final NonAggregationNormalSearchExecuteContext context
                     = (NonAggregationNormalSearchExecuteContext) this.context;
             // 语义分析
@@ -1100,7 +1100,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         }
 
         @Override
-        protected final NonAggregationNormalSearchCallback doCallback() throws crabsException {
+        protected final NonAggregationNormalSearchCallback doCallback() throws SQL4ESException {
             return new NonAggregationNormalSearchCallback();
         }
 
@@ -1117,7 +1117,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         }
 
         private NonAggregationNormalSearchExecutePlan query(
-                final NonAggregationNormalSearchExecuteContext context) throws crabsException {
+                final NonAggregationNormalSearchExecuteContext context) throws SQL4ESException {
             final Expression conditionExpression = context.finallyWhereConditionExpression;
             if (conditionExpression != null) {
                 this.searchSourceBuilder.query(
@@ -1131,7 +1131,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         }
 
         private NonAggregationNormalSearchExecutePlan postFilter(
-                final NonAggregationNormalSearchExecuteContext context) throws crabsException {
+                final NonAggregationNormalSearchExecuteContext context) throws SQL4ESException {
             final Expression conditionExpression = context.finallyHavingConditionExpression;
             if (conditionExpression != null) {
                 this.searchSourceBuilder.postFilter(
@@ -1142,7 +1142,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         }
 
         private NonAggregationNormalSearchExecutePlan sort(
-                final NonAggregationNormalSearchExecuteContext context) throws crabsException {
+                final NonAggregationNormalSearchExecuteContext context) throws SQL4ESException {
             final OrderSpecification[] orderSpecifications = context.finallyOrderSpecifications;
             if (orderSpecifications != null && orderSpecifications.length > 0) {
                 OrderSpecification orderSpecification;
@@ -1161,13 +1161,13 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         }
 
         private NonAggregationNormalSearchExecutePlan from(
-                final NonAggregationNormalSearchExecuteContext context) throws crabsException {
+                final NonAggregationNormalSearchExecuteContext context) throws SQL4ESException {
             this.searchSourceBuilder.from(context.offset);
             return this;
         }
 
         private NonAggregationNormalSearchExecutePlan size(
-                final NonAggregationNormalSearchExecuteContext context) throws crabsException {
+                final NonAggregationNormalSearchExecuteContext context) throws SQL4ESException {
             this.searchSourceBuilder.size(context.rowCount);
             return this;
         }
@@ -1189,7 +1189,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
 
             @Override
             public final SearchRequest buildRequest(final Client client,
-                                                    final SearchExecuteContext context) throws crabsException {
+                                                    final SearchExecuteContext context) throws SQL4ESException {
                 final SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(client);
                 searchRequestBuilder.internalBuilder(this.searchSourceBuilder);
                 searchRequestBuilder.setIndices(
@@ -1219,7 +1219,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
             }
 
             @Override
-            public final InternalResultSet getResultSet() throws crabsException {
+            public final InternalResultSet getResultSet() throws SQL4ESException {
                 return new SearchResultSet(
                         this.buildResultSetMetaData(),
                         this.buildResultIterator()
@@ -1229,9 +1229,9 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
             private Object[][] values;
 
             @Override
-            public final void callback(final SearchResponse response) throws crabsException {
+            public final void callback(final SearchResponse response) throws SQL4ESException {
                 if (response.status() != RestStatus.OK) {
-                    throw new crabsException("Failed to execute query with elasticsearch, response status is: "
+                    throw new SQL4ESException("Failed to execute query with elasticsearch, response status is: "
                             + response.status().getStatus());
                 }
                 final SearchHits searchHits = response.getHits();
@@ -1265,7 +1265,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 }
             }
 
-            private SearchResultSetMetaData buildResultSetMetaData() throws crabsException {
+            private SearchResultSetMetaData buildResultSetMetaData() throws SQL4ESException {
                 ColumnInformation columnInformation;
                 Identifier columnIdentifier;
                 String columnLabel;
@@ -1299,7 +1299,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 );
             }
 
-            private SearchResultSetIterator buildResultIterator() throws crabsException {
+            private SearchResultSetIterator buildResultIterator() throws SQL4ESException {
                 return new SearchResultSetIteratorImpl();
             }
 
@@ -1315,7 +1315,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 }
 
                 @Override
-                final boolean next() throws crabsException {
+                final boolean next() throws SQL4ESException {
                     return ++this.index < this.size;
                 }
 
@@ -1341,12 +1341,12 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 SelectStatementSemanticAnalyzer<NonAggregationNormalSearchExecuteContext> {
 
             NonAggregationNormalSearchSemanticAnalyzer(
-                    final NonAggregationNormalSearchExecuteContext context) throws crabsException {
+                    final NonAggregationNormalSearchExecuteContext context) throws SQL4ESException {
                 super(context);
             }
 
             @Override
-            public final void analyzeStatement() throws crabsException {
+            public final void analyzeStatement() throws SQL4ESException {
                 this.analyzeWhereClause();
                 this.analyzeGroupByClause();
                 this.analyzeSelectClause();
@@ -1355,7 +1355,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 this.analyzeLimitClause();
             }
 
-            private void analyzeSelectClause() throws crabsException {
+            private void analyzeSelectClause() throws SQL4ESException {
                 final ReadonlyList<ResultColumnDeclare> originalResultColumnDeclareList
                         = this.statement.selectClause.resultColumnDeclareList;
                 final int size = originalResultColumnDeclareList.size();
@@ -1369,7 +1369,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         if (!(reference.setIdentifier == null
                                 || reference.setIdentifier.equals(this.context.tableAlias)
                                 || reference.setIdentifier.equals(this.context.tableIdentifier))) {
-                            throw new crabsException("Unknown data source identifier[" + reference.setIdentifier +
+                            throw new SQL4ESException("Unknown data source identifier[" + reference.setIdentifier +
                                     "] in group by clause.");
                         }
 
@@ -1382,7 +1382,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 final Identifier fieldIdentifier = fieldDefinition.getIdentifier();
                                 final Identifier alias = fieldIdentifier;
                                 if (this.context.resultColumnAliasList.contains(alias)) {
-                                    throw new crabsException(
+                                    throw new SQL4ESException(
                                             "There's multi columns with the same alias[" + alias + "] in select clause."
                                     );
                                 }
@@ -1399,7 +1399,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             try {
                                 this.context.typeDefinition.getFieldDefinition(reference.columnIdentifier);
                             } catch (FieldNotExistsException e) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Column[" + reference.columnIdentifier + "] is not found in table[" +
                                                 this.context.tableIdentifier + "]"
                                 );
@@ -1407,7 +1407,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             final Identifier alias
                                     = resultColumnDeclare.alias == null ? reference.columnIdentifier : resultColumnDeclare.alias;
                             if (this.context.resultColumnAliasList.contains(alias)) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "There's multi columns with the same alias[" + alias + "] in select clause."
                                 );
                             }
@@ -1425,7 +1425,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         final Identifier alias
                                 = resultColumnDeclare.alias == null ? new Identifier(constant.value.toString()) : resultColumnDeclare.alias;
                         if (this.context.resultColumnAliasList.contains(alias)) {
-                            throw new crabsException(
+                            throw new SQL4ESException(
                                     "There's multi columns with the same alias[" + alias + "] in select clause."
                             );
                         }
@@ -1434,27 +1434,27 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         this.context.resultColumnExpressionList.add(constant);
 
                     } else {
-                        throw new crabsException(
+                        throw new SQL4ESException(
                                 "Invalid expression in select clause, only support Reference and Constant."
                         );
                     }
                 }
             }
 
-            private void analyzeGroupByClause() throws crabsException {
+            private void analyzeGroupByClause() throws SQL4ESException {
                 if (this.statement.groupByClause != null) {
-                    throw new crabsException("Group by clause is not necessary.");
+                    throw new SQL4ESException("Group by clause is not necessary.");
                 }
             }
 
-            private void analyzeHavingClause() throws crabsException {
+            private void analyzeHavingClause() throws SQL4ESException {
                 final HavingClause originalHavingClause = this.statement.havingClause;
                 if (originalHavingClause == null) {
                     return;
                 }
                 final Expression originalConditionExpression = originalHavingClause.conditionExpression;
                 if (originalConditionExpression.getResultType() != DataType.BOOLEAN) {
-                    throw new crabsException(
+                    throw new SQL4ESException(
                             "Invalid expression in having clause, only allow boolean expression."
                     );
                 }
@@ -1462,7 +1462,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         = analyzeExpressionInHavingClause(originalConditionExpression);
             }
 
-            private void analyzeOrderByClause() throws crabsException {
+            private void analyzeOrderByClause() throws SQL4ESException {
                 final OrderByClause originalClause = this.statement.orderByClause;
                 if (originalClause == null) {
                     return;
@@ -1477,17 +1477,17 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     originalOrderSpecification = originalOrderSpecificationList.get(index);
                     originalExpression = originalOrderSpecification.expression;
                     if (!(originalExpression instanceof Reference)) {
-                        throw new crabsException("Invalid expression[" + originalExpression +
+                        throw new SQL4ESException("Invalid expression[" + originalExpression +
                                 "] in order by clause, only allow reference.");
                     }
                     final Reference reference = Reference.class.cast(originalExpression);
                     if (reference.columnIdentifier.equals(Reference.ALL_COLUMN_IDENTIFIER)) {
-                        throw new crabsException("Can not have * in order by clause.");
+                        throw new SQL4ESException("Can not have * in order by clause.");
                     }
                     final Reference resultColumnReference
                             = this.context.aliasReferenceMap.get(reference.columnIdentifier);
                     if (resultColumnReference == null) {
-                        throw new crabsException(
+                        throw new SQL4ESException(
                                 "Unknown column[" + reference.columnIdentifier +
                                         "], maybe it is not in select clause or it is a constant in select clause."
                         );
@@ -1500,7 +1500,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 this.context.finallyOrderSpecifications = finallyOrderSpecifications;
             }
 
-            private void analyzeLimitClause() throws crabsException {
+            private void analyzeLimitClause() throws SQL4ESException {
                 final LimitClause limitClause = this.statement.limitClause;
                 if (limitClause == null) {
                     this.context.offset = 0;
@@ -1534,15 +1534,15 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
             }
 
             private Expression analyzeExpressionInHavingClause(
-                    final Expression originalExpression) throws crabsException {
+                    final Expression originalExpression) throws SQL4ESException {
                 if (originalExpression instanceof Reference) {
                     final Reference reference = Reference.class.cast(originalExpression);
                     if (reference.columnIdentifier.equals(Reference.ALL_COLUMN_IDENTIFIER)) {
-                        throw new crabsException("Can not contain * reference in having clause.");
+                        throw new SQL4ESException("Can not contain * reference in having clause.");
                     }
                     Reference resultColumnReference = this.context.aliasReferenceMap.get(reference.columnIdentifier);
                     if (resultColumnReference == null) {
-                        throw new crabsException(
+                        throw new SQL4ESException(
                                 "Unknown column[" + reference + "], " +
                                         "it is not exist in select clause or maybe it is constant in select clause."
                         );
@@ -1564,7 +1564,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 } else if (originalExpression instanceof Constant) {
                     return originalExpression;
                 }
-                throw new crabsException("Invalid expression[" + originalExpression +
+                throw new SQL4ESException("Invalid expression[" + originalExpression +
                         "], which is not supported in having clause.");
             }
 
@@ -1582,7 +1582,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
 
             final ArrayList<Identifier> resultColumnAliasList;
 
-            NonAggregationNormalSearchExecuteContext(final SearchExecuteContext context) throws crabsException {
+            NonAggregationNormalSearchExecuteContext(final SearchExecuteContext context) throws SQL4ESException {
                 super(context);
                 this.aliasReferenceMap = new HashMap<Identifier, Reference>();
                 this.aliasExpressionMap = new HashMap<Identifier, Expression>();
@@ -1607,7 +1607,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
             SelectStatementExecutePlan<AggregationNormalSearchExecutePlan.AggregationNormalSearchRequestBuilder,
                     AggregationNormalSearchExecutePlan.AggregationNormalSearchCallback> {
 
-        protected AggregationNormalSearchExecutePlan(final SearchExecuteContext context) throws crabsException {
+        protected AggregationNormalSearchExecutePlan(final SearchExecuteContext context) throws SQL4ESException {
             super(new AggregationNormalSearchExecuteContext(context));
         }
 
@@ -1629,7 +1629,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         private SearchSourceBuilder searchSourceBuilder;
 
         @Override
-        protected final AggregationNormalSearchRequestBuilder doCreateRequestBuilder() throws crabsException {
+        protected final AggregationNormalSearchRequestBuilder doCreateRequestBuilder() throws SQL4ESException {
             final AggregationNormalSearchExecuteContext context
                     = (AggregationNormalSearchExecuteContext) this.context;
             final SelectStatementSemanticAnalyzer semanticAnalyzer
@@ -1643,12 +1643,12 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         }
 
         @Override
-        protected final AggregationNormalSearchCallback doCallback() throws crabsException {
+        protected final AggregationNormalSearchCallback doCallback() throws SQL4ESException {
             return new AggregationNormalSearchCallback();
         }
 
         private AggregationNormalSearchExecutePlan query(
-                final AggregationNormalSearchExecuteContext context) throws crabsException {
+                final AggregationNormalSearchExecuteContext context) throws SQL4ESException {
             final Expression conditionExpression = context.finallyWhereConditionExpression;
             if (conditionExpression != null) {
                 this.searchSourceBuilder.query(
@@ -1662,7 +1662,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         }
 
         private AggregationNormalSearchExecutePlan agg(
-                final AggregationNormalSearchExecuteContext context) throws crabsException {
+                final AggregationNormalSearchExecuteContext context) throws SQL4ESException {
             if (context.existsGroupByClause) {
                 final ArrayList<Identifier> groupByColumnIdentifierList = context.finallyGroupColumnIdentifierList;
                 final int size = groupByColumnIdentifierList.size();
@@ -1690,7 +1690,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         }
 
         private AbstractAggregationBuilder agg(final Aggregation aggregation,
-                                               final Integer index) throws crabsException {
+                                               final Integer index) throws SQL4ESException {
             final String name = index.toString();
             if (aggregation instanceof CountFunction) {
                 final CountFunction count = CountFunction.class.cast(aggregation);
@@ -1732,7 +1732,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 Reference.class.cast(mininum.getOperandExpression(0)).columnIdentifier.toString()
                         );
             }
-            throw new crabsException("Unsupported aggregation[" + aggregation + "]");
+            throw new SQL4ESException("Unsupported aggregation[" + aggregation + "]");
         }
 
         final class AggregationNormalSearchRequestBuilder implements
@@ -1752,7 +1752,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
 
             @Override
             public final SearchRequest buildRequest(final Client client,
-                                                    final SearchExecuteContext context) throws crabsException {
+                                                    final SearchExecuteContext context) throws SQL4ESException {
                 final SearchRequestBuilder builder = new SearchRequestBuilder(client);
                 builder.internalBuilder(this.searchSourceBuilder);
                 builder.setIndices(
@@ -1780,7 +1780,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
             }
 
             @Override
-            public final InternalResultSet getResultSet() throws crabsException {
+            public final InternalResultSet getResultSet() throws SQL4ESException {
                 return new SearchResultSet(
                         this.buildResultSetMetaData(),
                         this.buildResultIterator()
@@ -1790,9 +1790,9 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
             private ArrayList<Object[]> values;
 
             @Override
-            public final void callback(final SearchResponse response) throws crabsException {
+            public final void callback(final SearchResponse response) throws SQL4ESException {
                 if (response.status() != RestStatus.OK) {
-                    throw new crabsException("Failed to execute query with elasticsearch, response status is: "
+                    throw new SQL4ESException("Failed to execute query with elasticsearch, response status is: "
                             + response.status().getStatus());
                 }
                 this.values = new ArrayList<Object[]>();
@@ -1810,7 +1810,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
             private void parseAggregationResponse(final Aggregations aggs,
                                                   final Object[] columnValues,
                                                   final int currentGroupColumnIndex,
-                                                  final int groupColumnCount) throws crabsException {
+                                                  final int groupColumnCount) throws SQL4ESException {
                 if (currentGroupColumnIndex == groupColumnCount) {
                     // 需要解析聚合函数值以及常量值
                     for (Map.Entry<Integer, Constant> constantEntry : this.context.finallyResultColumnConstantIndexMap.entrySet()) {
@@ -1833,7 +1833,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         } else if (agg instanceof MininumFunction) {
                             aggValue = Min.class.cast(aggs.get(index.toString())).getValue();
                         } else {
-                            throw new crabsException("Unsupported expression[" + agg + "]");
+                            throw new SQL4ESException("Unsupported expression[" + agg + "]");
                         }
                         columnValues[index] = aggValue;
                     }
@@ -1870,11 +1870,11 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 }
             }
 
-            private SearchResultSetIterator buildResultIterator() throws crabsException {
+            private SearchResultSetIterator buildResultIterator() throws SQL4ESException {
                 return new SearchResultSetIteratorImpl();
             }
 
-            private SearchResultSetMetaData buildResultSetMetaData() throws crabsException {
+            private SearchResultSetMetaData buildResultSetMetaData() throws SQL4ESException {
                 ColumnInformation columnInformation;
                 Identifier columnIdentifier;
                 String columnLabel;
@@ -1922,7 +1922,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 }
 
                 @Override
-                final boolean next() throws crabsException {
+                final boolean next() throws SQL4ESException {
                     return ++this.index < this.size;
                 }
 
@@ -1946,7 +1946,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
 
         private static final class AggregationNormalSearchExecuteContext extends SearchExecuteContext {
 
-            AggregationNormalSearchExecuteContext(final SearchExecuteContext context) throws crabsException {
+            AggregationNormalSearchExecuteContext(final SearchExecuteContext context) throws SQL4ESException {
                 super(context);
                 this.finallyGroupColumnIdentifierList = new ArrayList<Identifier>();
                 this.finallyResultColumnAliasList = new ArrayList<Identifier>();
@@ -1978,12 +1978,12 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 extends SelectStatementSemanticAnalyzer<AggregationNormalSearchExecuteContext> {
 
             protected AggregationNormalSearchSemanticAnalyzer(
-                    final AggregationNormalSearchExecuteContext context) throws crabsException {
+                    final AggregationNormalSearchExecuteContext context) throws SQL4ESException {
                 super(context);
             }
 
             @Override
-            public final void analyzeStatement() throws crabsException {
+            public final void analyzeStatement() throws SQL4ESException {
                 this.analyzeWhereClause();
                 this.analyzeGroupByClause();
                 this.analyzeSelectClause();
@@ -1992,7 +1992,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 this.analyzeLimitClause();
             }
 
-            private void analyzeGroupByClause() throws crabsException {
+            private void analyzeGroupByClause() throws SQL4ESException {
                 final GroupByClause originalGroupClause = this.context.statement.groupByClause;
                 if (originalGroupClause == null) {
                     return;
@@ -2005,23 +2005,23 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 for (int index = 0, size = originalGroupExpressionList.size(); index < size; index++) {
                     originalExpression = originalGroupExpressionList.get(index);
                     if (!(originalExpression instanceof Reference)) {
-                        throw new crabsException("Invalid expression in where clause, only allow column name.");
+                        throw new SQL4ESException("Invalid expression in where clause, only allow column name.");
                     }
                     reference = Reference.class.cast(originalExpression);
                     if (reference.columnIdentifier.equals(Reference.ALL_COLUMN_IDENTIFIER)) {
-                        throw new crabsException("Can not contain * reference in where clause.");
+                        throw new SQL4ESException("Can not contain * reference in where clause.");
                     }
                     if (!(reference.setIdentifier == null
                             || reference.setIdentifier.equals(this.context.tableAlias)
                             || reference.setIdentifier.equals(this.context.tableIdentifier))) {
-                        throw new crabsException("Unknown data source identifier[" +
+                        throw new SQL4ESException("Unknown data source identifier[" +
                                 reference.setIdentifier + "] in group by clause.");
                     }
                     identifier = reference.columnIdentifier;
                     try {
                         context.typeDefinition.getFieldDefinition(identifier);
                     } catch (FieldNotExistsException e) {
-                        throw new crabsException(
+                        throw new SQL4ESException(
                                 "Column[" + reference + "] is not found in table[" +
                                         context.tableIdentifier + "]"
                         );
@@ -2030,7 +2030,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 }
             }
 
-            private void analyzeSelectClause() throws crabsException {
+            private void analyzeSelectClause() throws SQL4ESException {
                 final ReadonlyList<ResultColumnDeclare> resultColumnDeclareList
                         = this.context.statement.selectClause.resultColumnDeclareList;
                 ResultColumnDeclare resultColumnDeclare;
@@ -2045,15 +2045,15 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         if (!(reference.setIdentifier == null
                                 || reference.setIdentifier.equals(this.context.tableAlias)
                                 || reference.setIdentifier.equals(this.context.tableIdentifier))) {
-                            throw new crabsException("Unknown data source identifier[" + reference.setIdentifier +
+                            throw new SQL4ESException("Unknown data source identifier[" + reference.setIdentifier +
                                     "] in group by clause.");
                         }
                         if (reference.columnIdentifier.equals(Reference.ALL_COLUMN_IDENTIFIER)) {
-                            throw new crabsException("Can not contains '*' in select clause for having aggregation expression.");
+                            throw new SQL4ESException("Can not contains '*' in select clause for having aggregation expression.");
                         }
                         if (!this.context.existsGroupByClause
                                 || !this.context.finallyGroupColumnIdentifierList.contains(reference.columnIdentifier)) {
-                            throw new crabsException(
+                            throw new SQL4ESException(
                                     "Invalid column[" + reference.columnIdentifier + "] in select clause, it must in group by clause."
                             );
                         }
@@ -2069,7 +2069,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             aggregation = CountFunction.class.cast(resultColumnExpression);
                             final Expression operandExpression = aggregation.getOperandExpression(0);
                             if (!(operandExpression instanceof Reference)) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Unsupported expression[" + operandExpression + "] in " +
                                                 CountFunction.IDENTIFIER + "()."
                                 );
@@ -2079,7 +2079,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 try {
                                     this.context.typeDefinition.getFieldDefinition(reference.columnIdentifier);
                                 } catch (FieldNotExistsException e) {
-                                    throw new crabsException(
+                                    throw new SQL4ESException(
                                             "Unknown column[" + reference.columnIdentifier + "] in " +
                                                     CountFunction.IDENTIFIER + "()."
                                     );
@@ -2089,14 +2089,14 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             aggregation = SummaryFunction.class.cast(resultColumnExpression);
                             final Expression operandExpression = aggregation.getOperandExpression(0);
                             if (!(operandExpression instanceof Reference)) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Unsupported expression[" + operandExpression + "] in " +
                                                 SummaryFunction.IDENTIFIER + "()."
                                 );
                             }
                             final Reference reference = Reference.class.cast(operandExpression);
                             if (reference.columnIdentifier.equals(Reference.ALL_COLUMN_IDENTIFIER)) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Can not contains '*' in " +
                                                 SummaryFunction.IDENTIFIER + "()."
                                 );
@@ -2104,7 +2104,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             try {
                                 this.context.typeDefinition.getFieldDefinition(reference.columnIdentifier);
                             } catch (FieldNotExistsException e) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Unknown column[" + reference.columnIdentifier + "] in " +
                                                 SummaryFunction.IDENTIFIER + "()."
                                 );
@@ -2114,14 +2114,14 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             aggregation = MaxinumFunction.class.cast(resultColumnExpression);
                             final Expression operandExpression = aggregation.getOperandExpression(0);
                             if (!(operandExpression instanceof Reference)) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Unsupported expression[" + operandExpression + "] in " +
                                                 MaxinumFunction.IDENTIFIER + "()."
                                 );
                             }
                             final Reference reference = Reference.class.cast(operandExpression);
                             if (reference.columnIdentifier.equals(Reference.ALL_COLUMN_IDENTIFIER)) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Can not contains '*' in " +
                                                 MaxinumFunction.IDENTIFIER + "()."
                                 );
@@ -2129,7 +2129,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             try {
                                 this.context.typeDefinition.getFieldDefinition(reference.columnIdentifier);
                             } catch (FieldNotExistsException e) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Unknown column[" + reference.columnIdentifier + "]" +
                                                 MaxinumFunction.IDENTIFIER + "()."
                                 );
@@ -2138,14 +2138,14 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             aggregation = MininumFunction.class.cast(resultColumnExpression);
                             final Expression operandExpression = aggregation.getOperandExpression(0);
                             if (!(operandExpression instanceof Reference)) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Unsupported expression[" + operandExpression + "] in " +
                                                 MininumFunction.IDENTIFIER + "()."
                                 );
                             }
                             final Reference reference = Reference.class.cast(operandExpression);
                             if (reference.columnIdentifier.equals(Reference.ALL_COLUMN_IDENTIFIER)) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Can not contains '*' in " +
                                                 MininumFunction.IDENTIFIER + "()."
                                 );
@@ -2153,7 +2153,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             try {
                                 this.context.typeDefinition.getFieldDefinition(reference.columnIdentifier);
                             } catch (FieldNotExistsException e) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Unknown column[" + reference.columnIdentifier + "]" +
                                                 MininumFunction.IDENTIFIER + "()."
                                 );
@@ -2162,14 +2162,14 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             aggregation = AverageFunction.class.cast(resultColumnExpression);
                             final Expression operandExpression = aggregation.getOperandExpression(0);
                             if (!(operandExpression instanceof Reference)) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Unsupported expression[" + operandExpression + "] in " +
                                                 AverageFunction.IDENTIFIER + "()."
                                 );
                             }
                             final Reference reference = Reference.class.cast(operandExpression);
                             if (reference.columnIdentifier.equals(Reference.ALL_COLUMN_IDENTIFIER)) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Can not contains '*' in " +
                                                 AverageFunction.IDENTIFIER + "()."
                                 );
@@ -2177,13 +2177,13 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                             try {
                                 this.context.typeDefinition.getFieldDefinition(reference.columnIdentifier);
                             } catch (FieldNotExistsException e) {
-                                throw new crabsException(
+                                throw new SQL4ESException(
                                         "Unknown column[" + reference.columnIdentifier + "]" +
                                                 AverageFunction.IDENTIFIER + "()."
                                 );
                             }
                         } else {
-                            throw new crabsException("Unsupported aggregation[" + resultColumnExpression + "]");
+                            throw new SQL4ESException("Unsupported aggregation[" + resultColumnExpression + "]");
                         }
                         this.context.finallyResultColumnAliasList.add(
                                 resultColumnAlias == null
@@ -2201,31 +2201,31 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         this.context.finallyResultColumnConstantIndexMap.put(index, constant);
 
                     } else {
-                        throw new crabsException("Unsupported expression[" + resultColumnExpression +
+                        throw new SQL4ESException("Unsupported expression[" + resultColumnExpression +
                                 "] in select clause.");
                     }
                 }
             }
 
-            private void analyzeHavingClause() throws crabsException {
+            private void analyzeHavingClause() throws SQL4ESException {
                 if (this.context.statement.havingClause != null) {
-                    throw new crabsException(
+                    throw new SQL4ESException(
                             "For aggregation, having clause is not supported."
                     );
                 }
             }
 
-            private void analyzeOrderByClause() throws crabsException {
+            private void analyzeOrderByClause() throws SQL4ESException {
                 if (this.context.statement.orderByClause != null) {
-                    throw new crabsException(
+                    throw new SQL4ESException(
                             "For aggregation, order by clause is not supported."
                     );
                 }
             }
 
-            private void analyzeLimitClause() throws crabsException {
+            private void analyzeLimitClause() throws SQL4ESException {
                 if (this.context.statement.limitClause != null) {
-                    throw new crabsException(
+                    throw new SQL4ESException(
                             "For aggregation, limit clause is not supported."
                     );
                 }

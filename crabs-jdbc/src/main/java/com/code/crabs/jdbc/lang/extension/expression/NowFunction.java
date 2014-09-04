@@ -1,7 +1,7 @@
 package com.code.crabs.jdbc.lang.extension.expression;
 
 import com.code.crabs.core.DataType;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 import com.code.crabs.jdbc.lang.expression.Function;
 import com.code.crabs.jdbc.lang.expression.NonAggregation;
 
@@ -24,7 +24,7 @@ public final class NowFunction extends NonAggregation implements Function {
     }
 
     @Override
-    public final DataType getResultType() throws crabsException {
+    public final DataType getResultType() throws SQL4ESException {
         return DataType.DATE;
     }
 }

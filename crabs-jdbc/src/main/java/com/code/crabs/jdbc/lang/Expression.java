@@ -3,7 +3,7 @@ package com.code.crabs.jdbc.lang;
 import com.code.crabs.common.util.ReadonlyList;
 import com.code.crabs.core.DataType;
 import com.code.crabs.jdbc.lang.expression.context.Context;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 
 public abstract class Expression {
 
@@ -17,13 +17,13 @@ public abstract class Expression {
 
     private ReadonlyList<Expression> operandExpressionList;
 
-    public abstract DataType getResultType() throws crabsException;
+    public abstract DataType getResultType() throws SQL4ESException;
 
-    public DataType getResultType(Context context) throws crabsException {
+    public DataType getResultType(Context context) throws SQL4ESException {
         return this.getResultType();
     }
 
-    public final ReadonlyList<Expression> getOperandExpressionList() throws crabsException {
+    public final ReadonlyList<Expression> getOperandExpressionList() throws SQL4ESException {
         if (this.operandExpressionList == null) {
             this.operandExpressionList = this.doGetOperandExpressionList();
         }
@@ -47,7 +47,7 @@ public abstract class Expression {
         if (this.string == null) {
             try {
                 this.string = this.doToString();
-            } catch (crabsException e) {
+            } catch (SQL4ESException e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
         }
@@ -75,13 +75,13 @@ public abstract class Expression {
                 }
             }
             return false;
-        } catch (crabsException e) {
+        } catch (SQL4ESException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    protected abstract ReadonlyList<Expression> doGetOperandExpressionList() throws crabsException;
+    protected abstract ReadonlyList<Expression> doGetOperandExpressionList() throws SQL4ESException;
 
-    protected abstract String doToString() throws crabsException;
+    protected abstract String doToString() throws SQL4ESException;
 
 }

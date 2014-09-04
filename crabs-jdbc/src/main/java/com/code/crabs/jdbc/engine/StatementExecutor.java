@@ -2,7 +2,7 @@ package com.code.crabs.jdbc.engine;
 
 import com.code.crabs.core.client.AdvancedClient;
 import com.code.crabs.jdbc.lang.Statement;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 
 public abstract class StatementExecutor<TStatement extends Statement, TResult> {
 
@@ -27,6 +27,6 @@ public abstract class StatementExecutor<TStatement extends Statement, TResult> {
     protected abstract TResult execute(AdvancedClient advancedClient,
                                        TStatement statement,
                                        ExecuteEnvironment environment,
-                                       Object[] argumentValues) throws crabsException;
+                                       Object[] argumentValues) throws SQL4ESException;
 
 }

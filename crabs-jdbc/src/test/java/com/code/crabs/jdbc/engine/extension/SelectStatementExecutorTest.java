@@ -6,7 +6,7 @@ import com.code.crabs.core.Identifier;
 import com.code.crabs.core.IndexDefinition;
 import com.code.crabs.core.TypeDefinition;
 import com.code.crabs.core.client.AdvancedClient;
-import com.code.crabs.exception.crabsException;
+import com.code.crabs.exception.SQL4ESException;
 import com.code.crabs.jdbc.compiler.GrammarAnalyzer;
 import com.code.crabs.jdbc.engine.ExecuteEngine;
 import com.code.crabs.jdbc.engine.ExecuteEnvironment;
@@ -113,7 +113,7 @@ public class SelectStatementExecutorTest {
             );
             try {
                 init(advancedClient);
-            } catch (crabsException e) {
+            } catch (SQL4ESException e) {
                 throw new RuntimeException(e);
             } finally {
                 try {
@@ -372,7 +372,7 @@ public class SelectStatementExecutorTest {
             return Arrays.asList(data);
         }
 
-        private static void init(final AdvancedClient advancedClient) throws crabsException {
+        private static void init(final AdvancedClient advancedClient) throws SQL4ESException {
             final IndexDefinition indexDefinition = new IndexDefinition(new Identifier("test"));
             if (!advancedClient.existsIndex(indexDefinition.getIdentifier())) {
                 advancedClient.createIndex(indexDefinition);
