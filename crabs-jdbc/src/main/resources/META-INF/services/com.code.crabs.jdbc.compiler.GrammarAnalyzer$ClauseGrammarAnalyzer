@@ -1,7 +1,0 @@
-com.code.crabs.jdbc.compiler.extension.clause.FromClauseGrammarAnalyzer
-com.code.crabs.jdbc.compiler.extension.clause.GroupByClauseGrammarAnalyzer
-com.code.crabs.jdbc.compiler.extension.clause.HavingClauseGrammarAnalyzer
-com.code.crabs.jdbc.compiler.extension.clause.LimitClauseGrammarAnalyzer
-com.code.crabs.jdbc.compiler.extension.clause.OrderByClauseGrammarAnalyzer
-com.code.crabs.jdbc.compiler.extension.clause.SelectClauseGrammarAnalyzer
-com.code.crabs.jdbc.compiler.extension.clause.WhereClauseGrammarAnalyzer
