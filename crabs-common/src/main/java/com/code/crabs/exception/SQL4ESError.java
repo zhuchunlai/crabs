@@ -1,22 +1,22 @@
 package com.code.crabs.exception;
 
-public final class crabsError extends Error {
+public final class SQL4ESError extends Error {
 
     private static final long serialVersionUID = 1811695293470214630L;
 
-    public crabsError() {
+    public SQL4ESError() {
         // to do nothing.
     }
 
-    public crabsError(final String message) {
+    public SQL4ESError(final String message) {
         this(message, null);
     }
 
-    public crabsError(final Throwable cause) {
+    public SQL4ESError(final Throwable cause) {
         this(null, cause);
     }
 
-    public crabsError(final String message, final Throwable cause) {
+    public SQL4ESError(final String message, final Throwable cause) {
         super(message, cause);
     }
 
