@@ -30,7 +30,7 @@ __NOTE:__ SQL is case sensitive
 #### where
 	{derived column list}: '*' or comma-separated list of field names or constant and they can have aliases
 	{where condition}: 
-		{field name} [>, >=, <, <=, ==, <>] value
+		{field name} [>, >=, <, <=, =, <>] value
 		{field name} like {pattern}
 		{field name} not like {pattern}
 		{field name} in(value1, value2, ...)
