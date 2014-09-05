@@ -11,6 +11,8 @@ __NOTE:__ When you use crabs, there are some restrictions on elasticsearch index
 	field name of type: it is the same of above.
 	
 	all names are case sensitive
+	
+	you must set "_id" mapping and be associated with a path, need more details, please click [link](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/mapping-id-field.html)
  
 ## Documentation
 Now, crabs support two types of select statement, detail as bellow:
@@ -86,4 +88,6 @@ Crabs has two system properties. Details as bellow:
 	
 	metaDataTTL: define the ttl of meta data(index and type meta data) in crabs, its unit is minute.
 		 
-	    
+## More
+
+Details about elasticsearch, http://www.elasticsearch.org	    
