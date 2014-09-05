@@ -12,7 +12,7 @@ __NOTE:__ When you use crabs, there are some restrictions on elasticsearch index
 	
 	all names are case sensitive
 	
-	you must set "_id" mapping and be associated with a path, need more details, please click [link](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/mapping-id-field.html)
+	you must set "_id" mapping and be associated with a path, more details: http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/mapping-id-field.html
  
 ## Documentation
 Now, crabs support two types of select statement, detail as bellow:
