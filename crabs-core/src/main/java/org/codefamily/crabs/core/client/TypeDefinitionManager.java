@@ -85,7 +85,7 @@ final class TypeDefinitionManager {
                         contentBuilder.field("type", dataType.getElasticsearchType());
                         switch (dataType) {
                             case DATE:
-                                contentBuilder.field("format", Constants.PATTERN_YYYY_MM_DD_HH_MM_SS);
+                                contentBuilder.field("format", fieldDefinition.getPattern());
                                 break;
                             case STRING:
                                 contentBuilder.field("index", "not_analyzed");

@@ -300,6 +300,14 @@ public final class AdvancedClient implements Closeable {
             this.port = port;
         }
 
+        public final String getHost() {
+            return this.host;
+        }
+
+        public final int getPort() {
+            return this.port;
+        }
+
         private String toStringValue;
 
         @Override

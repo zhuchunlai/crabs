@@ -8,35 +8,34 @@ import org.codefamily.crabs.core.IndexDefinition;
 import org.codefamily.crabs.core.TypeDefinition;
 import org.codefamily.crabs.core.TypeDefinition.FieldDefinition;
 import org.codefamily.crabs.core.client.AdvancedClient;
-import org.codefamily.crabs.core.client.AdvancedClient.ResponseCallback;
 import org.codefamily.crabs.core.client.AdvancedClient.InternalDocumentRequestBuilder;
+import org.codefamily.crabs.core.client.AdvancedClient.ResponseCallback;
 import org.codefamily.crabs.core.exception.FieldNotExistsException;
 import org.codefamily.crabs.core.exception.IndexNotExistsException;
 import org.codefamily.crabs.core.exception.TypeNotExistsException;
+import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.jdbc.engine.ExecuteEnvironment;
 import org.codefamily.crabs.jdbc.engine.SemanticAnalyzer;
 import org.codefamily.crabs.jdbc.engine.StatementExecutePlan;
+import org.codefamily.crabs.jdbc.engine.StatementExecutor;
+import org.codefamily.crabs.jdbc.internal.InternalResultSet;
 import org.codefamily.crabs.jdbc.lang.Expression;
 import org.codefamily.crabs.jdbc.lang.expression.*;
-import org.codefamily.crabs.jdbc.lang.expression.Aggregation;
-import org.codefamily.crabs.jdbc.lang.extension.clause.*;
 import org.codefamily.crabs.jdbc.lang.extension.clause.FromClause.SimpleTableDeclare;
+import org.codefamily.crabs.jdbc.lang.extension.clause.*;
 import org.codefamily.crabs.jdbc.lang.extension.clause.OrderByClause.OrderSpecification;
 import org.codefamily.crabs.jdbc.lang.extension.clause.SelectClause.ResultColumnDeclare;
 import org.codefamily.crabs.jdbc.lang.extension.expression.*;
 import org.codefamily.crabs.jdbc.lang.extension.statement.SelectStatement;
-import org.codefamily.crabs.exception.SQL4ESException;
-import org.codefamily.crabs.jdbc.internal.InternalResultSet;
-import org.codefamily.crabs.jdbc.engine.ExecuteEnvironment;
-import org.codefamily.crabs.jdbc.engine.StatementExecutor;
-import org.codefamily.crabs.jdbc.engine.extension.SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation;
-import org.codefamily.crabs.jdbc.engine.extension.SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.aggregations.*;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
@@ -57,7 +56,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static org.codefamily.crabs.jdbc.Protocol.PROPERTY_ENTRY$SCAN_SIZE;
+import static org.codefamily.crabs.jdbc.Protocol.*;
 
 public final class SelectStatementExecutor extends StatementExecutor<SelectStatement, InternalResultSet> {
 
@@ -76,7 +75,21 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
         final SelectStatementExecutePlan statementExecutePlan = SelectStatementExecutePlan.buildExecutePlan(context);
         final InternalDocumentRequestBuilder requestBuilder = statementExecutePlan.createRequestBuilder();
         final SearchResponseCallback callback = statementExecutePlan.callback();
+        // 以下是性能测试考虑
+        final boolean benchmarkEnabled = Boolean.parseBoolean(
+                environment.getProperty(
+                        PROPERTY_ENTRY$BENCHMARK_ENABLED.identifier,
+                        PROPERTY_ENTRY$BENCHMARK_ENABLED.defaultValue
+                )
+        );
+        LOGGER.info("benchmarkEnabled: " + benchmarkEnabled);
+        if (benchmarkEnabled) {
+            environment.start();
+        }
         advancedClient.execute(requestBuilder, callback, context);
+        if (benchmarkEnabled) {
+            environment.end();
+        }
         return callback.getResultSet();
     }
 
@@ -129,8 +142,16 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
 
         protected final SearchExecuteContext context;
 
+        protected final boolean outputSQLToElasticsearchRequestMapping;
+
         protected SelectStatementExecutePlan(final SearchExecuteContext context) {
             this.context = context;
+            this.outputSQLToElasticsearchRequestMapping = Boolean.parseBoolean(
+                    context.environment.getProperty(
+                            PROPERTY_ENTRY$OUTPUT_SQL_ES_MAPPING.identifier,
+                            PROPERTY_ENTRY$OUTPUT_SQL_ES_MAPPING.defaultValue
+                    )
+            );
         }
 
         private RequestBuilder requestBuilder;
@@ -1198,8 +1219,10 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 searchRequestBuilder.setTypes(
                         NonAggregationNormalSearchExecutePlan.this.context.tableIdentifier.toString()
                 );
-                LOGGER.info("SQL and request mapping [" + context.statement + " -> "
-                        + searchRequestBuilder.toString() + "]");
+                if (NonAggregationNormalSearchExecutePlan.this.outputSQLToElasticsearchRequestMapping) {
+                    LOGGER.info("SQL and request mapping [" + context.statement + " -> "
+                            + searchRequestBuilder.toString() + "]");
+                }
 
                 return searchRequestBuilder.request();
             }
@@ -1265,14 +1288,15 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 }
             }
 
-            private SearchResultSetMetaData buildResultSetMetaData() throws SQL4ESException {
-                ColumnInformation columnInformation;
+            private SearchResultSet.SearchResultSetMetaData buildResultSetMetaData() throws SQL4ESException {
+                SearchResultSet.SearchResultSetMetaData.ColumnInformation columnInformation;
                 Identifier columnIdentifier;
                 String columnLabel;
                 DataType dataType;
                 int columnDisplaySize;
                 Expression columnValueExpression;
-                ArrayList<ColumnInformation> columnInformationList = new ArrayList<ColumnInformation>();
+                ArrayList<SearchResultSet.SearchResultSetMetaData.ColumnInformation> columnInformationList
+                        = new ArrayList<SearchResultSet.SearchResultSetMetaData.ColumnInformation>();
                 for (int index = 0, size = this.context.resultColumnAliasList.size(); index < size; index++) {
                     columnIdentifier = this.context.resultColumnAliasList.get(index);
                     columnValueExpression = this.context.aliasExpressionMap.get(columnIdentifier);
@@ -1286,7 +1310,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     columnLabel = columnIdentifier.toString();
                     columnDisplaySize = dataType.displaySize();
-                    columnInformation = new ColumnInformation(
+                    columnInformation = new SearchResultSet.SearchResultSetMetaData.ColumnInformation(
                             columnIdentifier,
                             columnLabel,
                             dataType,
@@ -1294,8 +1318,10 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     );
                     columnInformationList.add(columnInformation);
                 }
-                return new SearchResultSetMetaData(
-                        columnInformationList.toArray(new ColumnInformation[columnInformationList.size()])
+                return new SearchResultSet.SearchResultSetMetaData(
+                        columnInformationList.toArray(
+                                new SearchResultSet.SearchResultSetMetaData.ColumnInformation[columnInformationList.size()]
+                        )
                 );
             }
 
@@ -1762,8 +1788,10 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         AggregationNormalSearchExecutePlan.this.context.tableIdentifier.toString()
                 );
                 builder.setSearchType(SearchType.COUNT);
-                LOGGER.info("SQL and request mapping [" + context.statement + " -> "
-                        + builder.toString() + "]");
+                if (AggregationNormalSearchExecutePlan.this.outputSQLToElasticsearchRequestMapping) {
+                    LOGGER.info("SQL and request mapping [" + context.statement + " -> "
+                            + builder.toString() + "]");
+                }
 
                 return builder.request();
             }
@@ -1874,14 +1902,15 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 return new SearchResultSetIteratorImpl();
             }
 
-            private SearchResultSetMetaData buildResultSetMetaData() throws SQL4ESException {
-                ColumnInformation columnInformation;
+            private SearchResultSet.SearchResultSetMetaData buildResultSetMetaData() throws SQL4ESException {
+                SearchResultSet.SearchResultSetMetaData.ColumnInformation columnInformation;
                 Identifier columnIdentifier;
                 String columnLabel;
                 DataType dataType;
                 int columnDisplaySize;
                 Expression columnValueExpression;
-                ArrayList<ColumnInformation> columnInformationList = new ArrayList<ColumnInformation>();
+                ArrayList<SearchResultSet.SearchResultSetMetaData.ColumnInformation> columnInformationList
+                        = new ArrayList<SearchResultSet.SearchResultSetMetaData.ColumnInformation>();
                 for (int index = 0, size = this.context.finallyResultColumnAliasList.size(); index < size; index++) {
                     columnIdentifier = this.context.finallyResultColumnAliasList.get(index);
                     columnValueExpression = this.context.finallyResultColumnExpressionIndexMap.get(index);
@@ -1897,7 +1926,7 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     }
                     columnLabel = columnIdentifier.toString();
                     columnDisplaySize = dataType.displaySize();
-                    columnInformation = new ColumnInformation(
+                    columnInformation = new SearchResultSet.SearchResultSetMetaData.ColumnInformation(
                             columnIdentifier,
                             columnLabel,
                             dataType,
@@ -1905,8 +1934,10 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     );
                     columnInformationList.add(columnInformation);
                 }
-                return new SearchResultSetMetaData(
-                        columnInformationList.toArray(new ColumnInformation[columnInformationList.size()])
+                return new SearchResultSet.SearchResultSetMetaData(
+                        columnInformationList.toArray(
+                                new SearchResultSet.SearchResultSetMetaData.ColumnInformation[columnInformationList.size()]
+                        )
                 );
             }
 

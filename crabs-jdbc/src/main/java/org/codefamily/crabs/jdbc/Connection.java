@@ -3,16 +3,18 @@ package org.codefamily.crabs.jdbc;
 import org.codefamily.crabs.Product;
 import org.codefamily.crabs.common.util.ReadonlyList;
 import org.codefamily.crabs.common.util.RegularExpressionHelper;
-import org.codefamily.crabs.core.*;
+import org.codefamily.crabs.core.DataType;
+import org.codefamily.crabs.core.Identifier;
+import org.codefamily.crabs.core.TypeDefinition;
 import org.codefamily.crabs.core.TypeDefinition.FieldDefinition;
 import org.codefamily.crabs.core.client.AdvancedClient;
 import org.codefamily.crabs.exception.SQL4ESException;
 import org.codefamily.crabs.jdbc.BaseClasses.ConnectionBase;
+import org.codefamily.crabs.jdbc.Protocol.PropertyEntry;
 import org.codefamily.crabs.jdbc.compiler.GrammarAnalyzer;
 import org.codefamily.crabs.jdbc.compiler.StatementCache;
 import org.codefamily.crabs.jdbc.engine.ExecuteEnvironment;
 import org.codefamily.crabs.jdbc.internal.InternalResultSet;
-import org.codefamily.crabs.jdbc.Protocol.PropertyEntry;
 
 import java.io.IOException;
 import java.sql.*;
@@ -41,7 +43,10 @@ public final class Connection extends ConnectionBase {
         } catch (SQL4ESException e) {
             throw new SQLException(e.getMessage(), e);
         }
-        final Properties finallyProperties = new Properties(properties);
+        final Properties finallyProperties = new Properties();
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            finallyProperties.put(entry.getKey().toString(), entry.getValue().toString());
+        }
         for (Map.Entry<Object, Object> entry : protocol.getProperties().entrySet()) {
             finallyProperties.setProperty(entry.getKey().toString(), entry.getValue().toString());
         }
@@ -264,13 +269,24 @@ public final class Connection extends ConnectionBase {
             this.statementCache.stop();
         } finally {
             try {
-                this.advancedClient.close();
+                this.executeEnvironment.close();
             } catch (IOException e) {
                 throw new SQLException(e.getMessage(), e);
             } finally {
-                this.closed = true;
+                try {
+                    this.advancedClient.close();
+                } catch (IOException e) {
+                    throw new SQLException(e.getMessage(), e);
+                } finally {
+                    this.closed = true;
+                }
             }
         }
+    }
+
+    // 此方法完全是为了性能测试而存在
+    public final ExecuteEnvironment getExecuteEnvironment() {
+        return this.executeEnvironment;
     }
 
     final org.codefamily.crabs.jdbc.lang.Statement analyzeStatement(final String SQL) throws SQLException {
