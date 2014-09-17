@@ -1237,21 +1237,49 @@ public class GrammarAnalyzer {
                         return null;
                     }
                 case NUMBERS:
-                    // 数值（目前只支持整数）
-                    final long value = Long.valueOf(context.currentTokenToString());
                     final Constant numberConstant;
-                    if (value > Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
-                        numberConstant = new Constant((int) value);
-                    } else if (value > Long.MIN_VALUE && value <= Long.MAX_VALUE) {
-                        numberConstant = new Constant(value);
-                    } else {
-                        throw newSQLException(
-                                context,
-                                "Unsupported number."
-                                        + value, context.currentTokenStartPosition()
-                        );
-                    }
+                    String currentTokenString = context.currentTokenToString();
                     context.toNextToken();
+                    if (context.currentTokenType == TokenType.SYMBOL
+                            && context.currentTokenToSymbol() == '.') {
+                        context.toNextToken();
+                        if (context.currentTokenType == TokenType.NUMBERS) {
+                            final double value = Double.parseDouble(
+                                    currentTokenString + "." + context.currentTokenToString()
+                            );
+                            if (value > Float.MIN_VALUE && value <= Float.MAX_VALUE) {
+                                numberConstant = new Constant((float) value);
+                            } else if (value > Double.MIN_VALUE && value <= Double.MAX_VALUE) {
+                                numberConstant = new Constant(value);
+                            } else {
+                                throw newSQLException(
+                                        context,
+                                        "Unsupported number." + value,
+                                        context.currentTokenStartPosition()
+                                );
+                            }
+                            context.toNextToken();
+                        } else {
+                            throw newSQLException(
+                                    context,
+                                    "Expect a number.",
+                                    context.currentTokenStartPosition
+                            );
+                        }
+                    } else {
+                        final long value = Long.valueOf(currentTokenString);
+                        if (value > Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
+                            numberConstant = new Constant((int) value);
+                        } else if (value > Long.MIN_VALUE && value <= Long.MAX_VALUE) {
+                            numberConstant = new Constant(value);
+                        } else {
+                            throw newSQLException(
+                                    context,
+                                    "Unsupported number." + value,
+                                    context.currentTokenStartPosition()
+                            );
+                        }
+                    }
                     return numberConstant;
                 case LETTERS:
                     currentTokenStartPosition = context.currentTokenStartPosition();
@@ -1412,6 +1440,26 @@ public class GrammarAnalyzer {
                                             "Expect a string constant.",
                                             currentTokenStartPosition);
                             }
+                        case '.':
+                            context.toNextToken();
+                            currentTokenStartPosition = context.currentTokenStartPosition;
+                            if (context.currentTokenType == TokenType.NUMBERS) {
+                                final double value = Double.parseDouble("." + context.currentTokenToString());
+                                if (value > Float.MIN_VALUE && value <= Float.MAX_VALUE) {
+                                    context.toNextToken();
+                                    return new Constant((float) value);
+                                } else if (value > Double.MIN_VALUE && value <= Double.MAX_VALUE) {
+                                    context.toNextToken();
+                                    return new Constant(value);
+                                } else {
+                                    throw newSQLException(
+                                            context,
+                                            "Expect a number.",
+                                            currentTokenStartPosition
+                                    );
+                                }
+                            }
+                            break;
                         /*case '[':
                             // 引用
                             final char expectEndSymbol = ']';

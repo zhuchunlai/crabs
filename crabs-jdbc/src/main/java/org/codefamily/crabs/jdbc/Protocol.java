@@ -122,8 +122,8 @@ public final class Protocol {
     private final Properties properties;
 
     Protocol(final ElasticsearchAddress[] addresses,
-                     final String databaseName,
-                     final Properties properties) {
+             final String databaseName,
+             final Properties properties) {
         this.elasticsearchAddresses = addresses;
         this.databaseName = databaseName;
         this.properties = properties;
@@ -143,6 +143,12 @@ public final class Protocol {
 
     public static final PropertyEntry PROPERTY_ENTRY$META_DATA_TTL
             = new PropertyEntry("metaDataTTL", Integer.MAX_VALUE, String.valueOf(5 * 60), "Database meta data ttl(min)");
+
+    public static final PropertyEntry PROPERTY_ENTRY$BENCHMARK_ENABLED
+            = new PropertyEntry("benchmarkEnabled", 1, String.valueOf(Boolean.FALSE), "Enable crabs executeBenchmark test.");
+
+    public static final PropertyEntry PROPERTY_ENTRY$OUTPUT_SQL_ES_MAPPING
+            = new PropertyEntry("outputSQLElasticsearchMapping", 1, String.valueOf(Boolean.TRUE), "Output SQL and ES request mapping.");
 
     // =======================================================
 

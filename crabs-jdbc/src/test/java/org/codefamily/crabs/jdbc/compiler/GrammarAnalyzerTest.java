@@ -1,12 +1,12 @@
 package org.codefamily.crabs.jdbc.compiler;
 
+import org.codefamily.crabs.exception.SQL4ESException;
 import org.codefamily.crabs.jdbc.lang.Statement;
 import org.codefamily.crabs.jdbc.lang.expression.Constant;
 import org.codefamily.crabs.jdbc.lang.expression.Reference;
-import org.codefamily.crabs.jdbc.lang.extension.statement.SelectStatement;
-import org.codefamily.crabs.exception.SQL4ESException;
 import org.codefamily.crabs.jdbc.lang.extension.clause.*;
 import org.codefamily.crabs.jdbc.lang.extension.expression.*;
+import org.codefamily.crabs.jdbc.lang.extension.statement.SelectStatement;
 import org.junit.Test;
 
 import java.sql.SQLException;
@@ -351,6 +351,37 @@ public class GrammarAnalyzerTest {
                 )),
                 new LimitClause(new Constant(0), new Constant(10))
         );
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public final void testAnalyzeSelectStatement_FloatingNumber() throws SQLException {
+        final String SQL = "SELECT * FROM student WHERE score_english > .9 and score_chinese < 90.1";
+        final Statement expected = new SelectStatement(
+                new SelectClause(
+                        null,
+                        null,
+                        new SelectClause.ResultColumnDeclare((String) null, new Reference((String) null, Reference.ALL_COLUMN_IDENTIFIER))
+                ),
+                new FromClause(new FromClause.SimpleTableDeclare(null, "student")),
+                new WhereClause(
+                        new AndExpression(
+                                new GreaterThanExpression(
+                                        new Reference(null, "score_english"),
+                                        new Constant(0.9F)
+                                ),
+                                new LessThanExpression(
+                                        new Reference(null, "score_chinese"),
+                                        new Constant(90.1F)
+                                )
+                        )
+                ),
+                null,
+                null,
+                null,
+                null
+        );
+        final Statement actual = GrammarAnalyzer.analyze(SQL);
         assertEquals(expected, actual);
     }
 

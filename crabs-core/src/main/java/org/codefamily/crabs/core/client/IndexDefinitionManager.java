@@ -184,7 +184,7 @@ final class IndexDefinitionManager {
                 throw new IndexNotExistsException("Index[" + indexIdentifier + "] is not exists.");
             }
         } catch (Exception e) {
-            throw new SQL4ESException(e);
+            throw new SQL4ESException("Failed to check index[" + indexIdentifier + "] exists.", e);
         }
         final class InternalClusterRequestBuilder$ClusterState implements
                 InternalClusterRequestBuilder<ClusterStateRequest, ClusterStateResponse, ClusterStateRequestBuilder, ClusterStateAction, Identifier> {

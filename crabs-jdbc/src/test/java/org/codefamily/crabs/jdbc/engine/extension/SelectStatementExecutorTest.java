@@ -10,10 +10,6 @@ import org.codefamily.crabs.exception.SQL4ESException;
 import org.codefamily.crabs.jdbc.compiler.GrammarAnalyzer;
 import org.codefamily.crabs.jdbc.engine.ExecuteEngine;
 import org.codefamily.crabs.jdbc.engine.ExecuteEnvironment;
-import org.codefamily.crabs.jdbc.engine.extension.SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData;
-import org.codefamily.crabs.jdbc.engine.extension.SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation;
-import org.codefamily.crabs.jdbc.engine.extension.SelectStatementExecutorTest.AggregationNormalSearchExecutorTest;
-import org.codefamily.crabs.jdbc.engine.extension.SelectStatementExecutorTest.NonAggregationNormalSearchExecutorTest;
 import org.codefamily.crabs.jdbc.internal.InternalResultSet;
 import org.codefamily.crabs.jdbc.internal.InternalResultSet.InternalMetaData;
 import org.codefamily.crabs.jdbc.lang.extension.statement.SelectStatement;
@@ -33,8 +29,8 @@ import static org.codefamily.crabs.common.Constants.PATTERN_YYYY_MM_DD_HH_MM_SS;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        NonAggregationNormalSearchExecutorTest.class,
-        AggregationNormalSearchExecutorTest.class
+        SelectStatementExecutorTest.NonAggregationNormalSearchExecutorTest.class,
+        SelectStatementExecutorTest.AggregationNormalSearchExecutorTest.class
 })
 public class SelectStatementExecutorTest {
 
@@ -131,13 +127,13 @@ public class SelectStatementExecutorTest {
                     {
                             "SELECT * FROM student order by stuno",
                             new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -150,14 +146,14 @@ public class SelectStatementExecutorTest {
                     },
                     {
                             "SELECT * FROM student where chinesescore > 95 order by stuno",
-                            new SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
+                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -170,13 +166,13 @@ public class SelectStatementExecutorTest {
                     {
                             "SELECT * FROM student where chinesescore > 95 and englishscore < 95 order by stuno",
                             new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -186,28 +182,28 @@ public class SelectStatementExecutorTest {
                     },
                     {
                             "SELECT * FROM student where chinesescore > 95 and stuclass in(102) order by stuno",
-                            new SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
+                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
                                     }
                             ),
                             new Object[][]{}
                     },
                     {
                             "SELECT * FROM student where chinesescore > 95 and stuname like '%an%' order by stuno",
-                            new SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
+                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -217,14 +213,14 @@ public class SelectStatementExecutorTest {
                     },
                     {
                             "SELECT * FROM student where chinesescore > 95 and stuname not like '%an%' order by stuno",
-                            new SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
+                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -233,14 +229,14 @@ public class SelectStatementExecutorTest {
                     },
                     {
                             "SELECT * FROM student where chinesescore > 95 and (stuname not like '%an%') order by stuno",
-                            new SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
+                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -249,14 +245,14 @@ public class SelectStatementExecutorTest {
                     },
                     {
                             "SELECT * FROM student where chinesescore > 95 and (stuname not like '%an%') or stuclass = 101  order by stuno",
-                            new SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
+                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -267,14 +263,14 @@ public class SelectStatementExecutorTest {
                     },
                     {
                             "SELECT * FROM student where (chinesescore > 95 and (stuname not like '%an%') or stuclass = 101) and englishscore > 95   order by stuno",
-                            new SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
+                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -283,14 +279,14 @@ public class SelectStatementExecutorTest {
                     },
                     {
                             "SELECT * FROM student order by stuno limit 0, 2",
-                            new SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
+                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -300,14 +296,14 @@ public class SelectStatementExecutorTest {
                     },
                     {
                             "SELECT * FROM student where stuclass = 101 having chinesescore > 93 order by englishscore desc",
-                            new SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
+                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -317,14 +313,14 @@ public class SelectStatementExecutorTest {
                     },
                     {
                             "SELECT * FROM student order by stuclass, englishscore desc",
-                            new SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
+                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -336,16 +332,16 @@ public class SelectStatementExecutorTest {
                     },
                     {
                             "SELECT *, stuno as id, \"test\" FROM student order by stuclass, englishscore desc",
-                            new SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
-                                            new ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize()),
-                                            new ColumnInformation(new Identifier("id"), "id", DataType.LONG, DataType.LONG.displaySize()),
-                                            new ColumnInformation(new Identifier("test"), "test", DataType.STRING, DataType.STRING.displaySize())
+                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("chinesescore"), "chinesescore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("englishscore"), "englishscore", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuname"), "stuname", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("id"), "id", DataType.LONG, DataType.LONG.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("test"), "test", DataType.STRING, DataType.STRING.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -357,10 +353,10 @@ public class SelectStatementExecutorTest {
                     },
                     {
                             "SELECT stuno, birthday from student where birthday > '1999-03-01 00:00:00' order by stuno",
-                            new SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize()),
-                                            new ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize())
+                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuno"), "stuno", DataType.LONG, DataType.LONG.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("birthday"), "birthday", DataType.DATE, DataType.DATE.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -409,12 +405,12 @@ public class SelectStatementExecutorTest {
                     {
                             "SELECT sum(chinesescore), avg(englishscore), count(*), max(chinesescore), min(englishscore) FROM student",
                             new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("SUM(chinesescore)"), "SUM(chinesescore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("AVG(englishscore)"), "AVG(englishscore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("COUNT(*)"), "COUNT(*)", DataType.LONG, DataType.LONG.displaySize()),
-                                            new ColumnInformation(new Identifier("MAX(chinesescore)"), "MAX(chinesescore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("MIN(englishscore)"), "MIN(englishscore)", DataType.DOUBLE, DataType.DOUBLE.displaySize())
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("SUM(chinesescore)"), "SUM(chinesescore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("AVG(englishscore)"), "AVG(englishscore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("COUNT(*)"), "COUNT(*)", DataType.LONG, DataType.LONG.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("MAX(chinesescore)"), "MAX(chinesescore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("MIN(englishscore)"), "MIN(englishscore)", DataType.DOUBLE, DataType.DOUBLE.displaySize())
                                     }
                             ),
                             new Object[][]{
@@ -424,10 +420,10 @@ public class SelectStatementExecutorTest {
                     {
                             "SELECT stuclass, sum(chinesescore), avg(englishscore) FROM student group by stuclass",
                             new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("SUM(chinesescore)"), "SUM(chinesescore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("AVG(englishscore)"), "AVG(englishscore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("SUM(chinesescore)"), "SUM(chinesescore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("AVG(englishscore)"), "AVG(englishscore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
                                     }
                             ),
                             new Object[][]{
@@ -439,11 +435,11 @@ public class SelectStatementExecutorTest {
                     {
                             "SELECT student.stuclass, sum(chinesescore), stuno stuNo, avg(englishscore) FROM student group by stuclass, stuno",
                             new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("SUM(chinesescore)"), "SUM(chinesescore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuNo"), "stuNo", DataType.LONG, DataType.LONG.displaySize()),
-                                            new ColumnInformation(new Identifier("AVG(englishscore)"), "AVG(englishscore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("SUM(chinesescore)"), "SUM(chinesescore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuNo"), "stuNo", DataType.LONG, DataType.LONG.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("AVG(englishscore)"), "AVG(englishscore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
                                     }
                             ),
                             new Object[][]{
@@ -456,11 +452,11 @@ public class SelectStatementExecutorTest {
                     {
                             "SELECT student.stuclass, sum(chinesescore), stuname stuName, avg(englishscore) FROM student group by stuclass, stuname",
                             new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData(
-                                    new ColumnInformation[]{
-                                            new ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
-                                            new ColumnInformation(new Identifier("SUM(chinesescore)"), "SUM(chinesescore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
-                                            new ColumnInformation(new Identifier("stuName"), "stuName", DataType.STRING, DataType.STRING.displaySize()),
-                                            new ColumnInformation(new Identifier("AVG(englishscore)"), "AVG(englishscore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                    new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation[]{
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuclass"), "stuclass", DataType.INTEGER, DataType.INTEGER.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("SUM(chinesescore)"), "SUM(chinesescore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("stuName"), "stuName", DataType.STRING, DataType.STRING.displaySize()),
+                                            new SelectStatementExecutor.SearchResultSet.SearchResultSetMetaData.ColumnInformation(new Identifier("AVG(englishscore)"), "AVG(englishscore)", DataType.DOUBLE, DataType.DOUBLE.displaySize()),
                                     }
                             ),
                             new Object[][]{
