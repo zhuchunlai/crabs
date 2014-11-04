@@ -49,8 +49,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static org.codefamily.crabs.jdbc.Protocol.PROPERTY_ENTRY$BENCHMARK_ENABLED;
-import static org.codefamily.crabs.jdbc.Protocol.PROPERTY_ENTRY$OUTPUT_SQL_ES_MAPPING;
+import static org.codefamily.crabs.jdbc.Protocol.*;
 import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
@@ -291,8 +290,6 @@ public final class Benchmark {
 
         protected long completeQueryCount;
 
-        protected double totalCostTime;
-
         protected ThroughputBenchmark(final int timeInMinute,
                                       final int concurrency,
                                       final int SQLType) {
@@ -301,14 +298,13 @@ public final class Benchmark {
             this.concurrency = concurrency;
             this.SQLType = SQLType;
             this.completeQueryCount = 0L;
-            this.totalCostTime = 0D;
         }
 
         public static ThroughputBenchmark newInstance(final String URL,
-                                               final int concurrency,
-                                               final int timeInMinute,
-                                               final int SQLType,
-                                               final boolean isElasticsearchPrimitive) throws Exception {
+                                                      final int concurrency,
+                                                      final int timeInMinute,
+                                                      final int SQLType,
+                                                      final boolean isElasticsearchPrimitive) throws Exception {
             if (!isElasticsearchPrimitive) {
                 return new CrabsThroughputBenchmark(URL, concurrency, timeInMinute, SQLType);
             }
@@ -322,7 +318,13 @@ public final class Benchmark {
                     properties,
                     timeInMinute,
                     concurrency,
-                    SQLType
+                    SQLType,
+                    Boolean.parseBoolean(
+                            properties.getProperty(
+                                    PROPERTY_ENTRY$ES_CACHE_ENABLED.identifier,
+                                    PROPERTY_ENTRY$ES_CACHE_ENABLED.defaultValue
+                            )
+                    )
             );
         }
 
@@ -352,8 +354,6 @@ public final class Benchmark {
             }
             LOG.info(this.getClass().getSimpleName() + " throughput: " +
                     this.completeQueryCount / (this.timeInMillis / 1000.0D));
-            LOG.info(this.getClass().getSimpleName() + " crabs response time: " +
-                    this.totalCostTime / this.completeQueryCount);
         }
 
         private static final class CrabsThroughputBenchmark extends ThroughputBenchmark {
@@ -396,16 +396,12 @@ public final class Benchmark {
                 @Override
                 public final void run() {
                     int completeQueryCount = 0;
-                    long crabsTotalCostTime = 0L;
                     try {
                         final Statement statement = CrabsThroughputBenchmark.this.connection.createStatement();
                         final long startTimeInMillis = System.currentTimeMillis();
-                        long executeStartTimeInMillis;
                         try {
                             for (; ; ) {
-                                executeStartTimeInMillis = System.currentTimeMillis();
                                 statement.executeQuery(this.getExecuteSQL());
-                                crabsTotalCostTime += (System.currentTimeMillis() - executeStartTimeInMillis);
                                 completeQueryCount++;
                                 if (System.currentTimeMillis() - startTimeInMillis >= CrabsThroughputBenchmark.this.timeInMillis) {
                                     break;
@@ -419,7 +415,6 @@ public final class Benchmark {
                     }
                     synchronized (CrabsThroughputBenchmark.this) {
                         CrabsThroughputBenchmark.this.completeQueryCount += completeQueryCount;
-                        CrabsThroughputBenchmark.this.totalCostTime += crabsTotalCostTime;
                         CrabsThroughputBenchmark.this.aliveExecutorCount--;
                     }
                 }
@@ -481,13 +476,16 @@ public final class Benchmark {
 
             private final String typeIdentifier;
 
+            private final boolean elasticsearchCacheEnabled;
+
             protected ElasticsearchThroughputBenchmark(final ElasticsearchAddress[] elasticsearchAddresses,
                                                        final String indexIdentifier,
                                                        final String typeIdentifier,
                                                        final Properties properties,
                                                        final int timeInMinute,
                                                        final int concurrency,
-                                                       final int SQLType) {
+                                                       final int SQLType,
+                                                       final boolean elasticsearchCacheEnabled) {
                 super(timeInMinute, concurrency, SQLType);
                 ImmutableSettings.Builder builder = settingsBuilder();
                 if (properties != null && !properties.isEmpty()) {
@@ -502,6 +500,7 @@ public final class Benchmark {
                 this.elasticsearchClient = client;
                 this.indexIdentifier = indexIdentifier;
                 this.typeIdentifier = typeIdentifier;
+                this.elasticsearchCacheEnabled = elasticsearchCacheEnabled;
             }
 
             @Override
@@ -536,16 +535,12 @@ public final class Benchmark {
                 @Override
                 public final void run() {
                     int completeQueryCount = 0;
-                    long totalCostTime = 0L;
-                    long executeStartTimeInMillis;
                     final long startTimeInMillis = System.currentTimeMillis();
                     for (; ; ) {
-                        executeStartTimeInMillis = System.currentTimeMillis();
                         ElasticsearchThroughputBenchmark.this.elasticsearchClient.execute(
                                 this.buildAction(),
                                 this.buildRequest()
                         ).actionGet();
-                        totalCostTime += (System.currentTimeMillis() - executeStartTimeInMillis);
                         completeQueryCount++;
                         if (System.currentTimeMillis() - startTimeInMillis >= ElasticsearchThroughputBenchmark.this.timeInMillis) {
                             break;
@@ -553,7 +548,6 @@ public final class Benchmark {
                     }
                     synchronized (ElasticsearchThroughputBenchmark.this) {
                         ElasticsearchThroughputBenchmark.this.completeQueryCount += completeQueryCount;
-                        ElasticsearchThroughputBenchmark.this.totalCostTime += totalCostTime;
                         ElasticsearchThroughputBenchmark.this.aliveExecutorCount--;
                     }
                 }
@@ -593,10 +587,12 @@ public final class Benchmark {
                                     FilterBuilders.andFilter(
                                             FilterBuilders
                                                     .rangeFilter(conditionFieldNames[firstConditionFieldIndex])
-                                                    .gt(randomConditionFieldValue(firstConditionFieldIndex, false)),
+                                                    .gt(randomConditionFieldValue(firstConditionFieldIndex, false))
+                                                    .cache(elasticsearchCacheEnabled),
                                             FilterBuilders
                                                     .rangeFilter(conditionFieldNames[secondConditionFieldIndex])
                                                     .lte(randomConditionFieldValue(secondConditionFieldIndex, false))
+                                                    .cache(elasticsearchCacheEnabled)
                                     )
                             )
 
@@ -632,11 +628,13 @@ public final class Benchmark {
                                     FilterBuilders.andFilter(
                                             FilterBuilders
                                                     .rangeFilter(conditionFieldNames[firstConditionFieldIndex])
-                                                    .gt(randomConditionFieldValue(firstConditionFieldIndex, false)),
+                                                    .gt(randomConditionFieldValue(firstConditionFieldIndex, false))
+                                                    .cache(elasticsearchCacheEnabled),
                                             FilterBuilders
                                                     .rangeFilter(conditionFieldNames[secondConditionFieldIndex])
                                                     .lte(randomConditionFieldValue(secondConditionFieldIndex, false))
-                                    )
+                                                    .cache(elasticsearchCacheEnabled)
+                                    ).cache(elasticsearchCacheEnabled)
                             )
 
                     );
@@ -771,7 +769,7 @@ public final class Benchmark {
 
     }
 
-    static final class BenchmarkInitializer implements Closeable{
+    static final class BenchmarkInitializer implements Closeable {
 
         private static final int DATA_WRITER_CONCURRENCY = 10;
 

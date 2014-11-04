@@ -1569,8 +1569,8 @@ public class GrammarAnalyzer {
             boolean expectExpression = false;
             for (; ; ) {
                 final Expression expression = expectExpression ? analyzeExpectedExpression(
-                        context, Byte.MAX_VALUE) : analyzeExpression(context,
-                        Byte.MAX_VALUE);
+                        context, (byte) 3) : analyzeExpression(context,
+                        (byte) 3);
                 if (expression != null) {
                     expressionList.add(expression);
                     if (context.currentTokenType() == TokenType.SYMBOL
@@ -1593,7 +1593,7 @@ public class GrammarAnalyzer {
                 final Expression firstExpression) throws SQLException {
             return new LikeExpression(
                     firstExpression,
-                    analyzeExpectedExpression(context, Byte.MAX_VALUE)
+                    analyzeExpectedExpression(context, (byte) 3)
             );
         }
 

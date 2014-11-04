@@ -82,7 +82,6 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         PROPERTY_ENTRY$BENCHMARK_ENABLED.defaultValue
                 )
         );
-        LOGGER.info("benchmarkEnabled: " + benchmarkEnabled);
         if (benchmarkEnabled) {
             environment.start();
         }
@@ -144,12 +143,20 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
 
         protected final boolean outputSQLToElasticsearchRequestMapping;
 
+        private final boolean elasticsearchCacheEnabled;
+
         protected SelectStatementExecutePlan(final SearchExecuteContext context) {
             this.context = context;
             this.outputSQLToElasticsearchRequestMapping = Boolean.parseBoolean(
                     context.environment.getProperty(
                             PROPERTY_ENTRY$OUTPUT_SQL_ES_MAPPING.identifier,
                             PROPERTY_ENTRY$OUTPUT_SQL_ES_MAPPING.defaultValue
+                    )
+            );
+            this.elasticsearchCacheEnabled = Boolean.parseBoolean(
+                    context.environment.getProperty(
+                            PROPERTY_ENTRY$ES_CACHE_ENABLED.identifier,
+                            PROPERTY_ENTRY$ES_CACHE_ENABLED.defaultValue
                     )
             );
         }
@@ -189,7 +196,9 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 for (int index = 0; index < size; index++) {
                     filterBuilders[index] = this.buildFilterBuilder(operandExpressionList.get(index));
                 }
-                return FilterBuilders.andFilter(filterBuilders);
+                return FilterBuilders
+                        .andFilter(filterBuilders)
+                        .cache(this.elasticsearchCacheEnabled);
             } else if (expression instanceof OrExpression) {
                 final ReadonlyList<Expression> operandExpressionList = expression.getOperandExpressionList();
                 final int size = operandExpressionList.size();
@@ -197,11 +206,15 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 for (int index = 0; index < size; index++) {
                     filterBuilders[index] = this.buildFilterBuilder(operandExpressionList.get(index));
                 }
-                return FilterBuilders.orFilter(filterBuilders);
+                return FilterBuilders
+                        .orFilter(filterBuilders)
+                        .cache(this.elasticsearchCacheEnabled);
             } else if (expression instanceof NotExpression) {
-                return FilterBuilders.notFilter(
-                        this.buildFilterBuilder(((NotExpression) expression).getOperandExpression(0))
-                );
+                return FilterBuilders
+                        .notFilter(
+                                this.buildFilterBuilder(((NotExpression) expression).getOperandExpression(0))
+                        )
+                        .cache(this.elasticsearchCacheEnabled);
             } else {
                 if (expression instanceof GreaterThanExpression) {
                     final GreaterThanExpression realExpression = (GreaterThanExpression) expression;
@@ -217,25 +230,129 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 this.context.argumentValue((Argument) operandTwo)
                         );
                     }
-                    if (operandOne instanceof Constant) {
+                    if (operandOne instanceof Constant
+                            || operandOne instanceof NegativeExpression
+                            || operandOne instanceof PositiveExpression) {
                         if (!(operandTwo instanceof Reference)) {
                             throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandTwo);
-                        final Constant constant = Constant.class.cast(operandOne);
-                        return FilterBuilders
-                                .rangeFilter(reference.columnIdentifier.toString())
-                                .lte(this.parseConstantValue(constant, reference));
+                        if (operandOne instanceof Constant
+                                || operandOne instanceof PositiveExpression) {
+                            final Constant constant;
+                            if (operandOne instanceof PositiveExpression) {
+                                operandOne = ((PositiveExpression) operandOne).getOperandExpression(0);
+                                if (!(operandOne instanceof Constant)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                                constant = (Constant) operandOne;
+                                final DataType dataType = constant.dataType;
+                                if (!(dataType == DataType.LONG
+                                        || dataType == DataType.INTEGER
+                                        || dataType == DataType.DOUBLE
+                                        || dataType == DataType.FLOAT)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            } else {
+                                constant = Constant.class.cast(operandOne);
+                            }
+                            return FilterBuilders
+                                    .rangeFilter(reference.columnIdentifier.toString())
+                                    .lte(this.parseConstantValue(constant, reference))
+                                    .cache(this.elasticsearchCacheEnabled);
+                        } else {
+                            operandOne = ((NegativeExpression) operandOne).getOperandExpression(0);
+                            if (operandOne instanceof Constant) {
+                                final Constant constant = (Constant) operandOne;
+                                switch (constant.dataType) {
+                                    case LONG:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lte((Long) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case DOUBLE:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lte((Double) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case INTEGER:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lte((Integer) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case FLOAT:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lte((Float) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    default:
+                                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            }
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
                     }
-                    if (operandTwo instanceof Constant) {
+                    if (operandTwo instanceof Constant
+                            || operandTwo instanceof NegativeExpression
+                            || operandTwo instanceof PositiveExpression) {
                         if (!(operandOne instanceof Reference)) {
                             throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandOne);
-                        final Constant constant = Constant.class.cast(operandTwo);
-                        return FilterBuilders
-                                .rangeFilter(reference.columnIdentifier.toString())
-                                .gt(this.parseConstantValue(constant, reference));
+                        if (operandTwo instanceof Constant
+                                || operandTwo instanceof PositiveExpression) {
+                            final Constant constant;
+                            if (operandTwo instanceof PositiveExpression) {
+                                operandTwo = ((PositiveExpression) operandTwo).getOperandExpression(0);
+                                if (!(operandTwo instanceof Constant)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                                constant = (Constant) operandTwo;
+                                final DataType dataType = constant.dataType;
+                                if (!(dataType == DataType.LONG
+                                        || dataType == DataType.INTEGER
+                                        || dataType == DataType.DOUBLE
+                                        || dataType == DataType.FLOAT)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            } else {
+                                constant = Constant.class.cast(operandTwo);
+                            }
+                            return FilterBuilders
+                                    .rangeFilter(reference.columnIdentifier.toString())
+                                    .gt(this.parseConstantValue(constant, reference))
+                                    .cache(this.elasticsearchCacheEnabled);
+                        } else {
+                            operandTwo = ((NegativeExpression) operandTwo).getOperandExpression(0);
+                            if (operandTwo instanceof Constant) {
+                                final Constant constant = (Constant) operandTwo;
+                                switch (constant.dataType) {
+                                    case LONG:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gt((Long) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case DOUBLE:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gt((Double) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case INTEGER:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gt((Integer) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case FLOAT:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gt((Float) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    default:
+                                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            }
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
                     }
                     throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
 
@@ -253,25 +370,129 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 this.context.argumentValue((Argument) operandTwo)
                         );
                     }
-                    if (operandOne instanceof Constant) {
+                    if (operandOne instanceof Constant
+                            || operandOne instanceof NegativeExpression
+                            || operandOne instanceof PositiveExpression) {
                         if (!(operandTwo instanceof Reference)) {
                             throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandTwo);
-                        final Constant constant = Constant.class.cast(operandOne);
-                        return FilterBuilders
-                                .rangeFilter(reference.columnIdentifier.toString())
-                                .lt(this.parseConstantValue(constant, reference));
+                        if (operandOne instanceof Constant
+                                || operandOne instanceof PositiveExpression) {
+                            final Constant constant;
+                            if (operandOne instanceof PositiveExpression) {
+                                operandOne = ((PositiveExpression) operandOne).getOperandExpression(0);
+                                if (!(operandOne instanceof Constant)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                                constant = (Constant) operandOne;
+                                final DataType dataType = constant.dataType;
+                                if (!(dataType == DataType.LONG
+                                        || dataType == DataType.INTEGER
+                                        || dataType == DataType.DOUBLE
+                                        || dataType == DataType.FLOAT)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            } else {
+                                constant = Constant.class.cast(operandOne);
+                            }
+                            return FilterBuilders
+                                    .rangeFilter(reference.columnIdentifier.toString())
+                                    .lt(this.parseConstantValue(constant, reference))
+                                    .cache(this.elasticsearchCacheEnabled);
+                        } else {
+                            operandOne = ((NegativeExpression) operandOne).getOperandExpression(0);
+                            if (operandOne instanceof Constant) {
+                                final Constant constant = (Constant) operandOne;
+                                switch (constant.dataType) {
+                                    case LONG:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lt((Long) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case DOUBLE:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lt((Double) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case INTEGER:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lt((Integer) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case FLOAT:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lt((Float) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    default:
+                                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            }
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
                     }
-                    if (operandTwo instanceof Constant) {
+                    if (operandTwo instanceof Constant
+                            || operandTwo instanceof NegativeExpression
+                            || operandTwo instanceof PositiveExpression) {
                         if (!(operandOne instanceof Reference)) {
                             throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandOne);
-                        final Constant constant = Constant.class.cast(operandTwo);
-                        return FilterBuilders
-                                .rangeFilter(reference.columnIdentifier.toString())
-                                .gte(this.parseConstantValue(constant, reference));
+                        if (operandTwo instanceof Constant
+                                || operandTwo instanceof PositiveExpression) {
+                            final Constant constant;
+                            if (operandTwo instanceof PositiveExpression) {
+                                operandTwo = ((PositiveExpression) operandTwo).getOperandExpression(0);
+                                if (!(operandTwo instanceof Constant)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                                constant = (Constant) operandTwo;
+                                final DataType dataType = constant.dataType;
+                                if (!(dataType == DataType.LONG
+                                        || dataType == DataType.INTEGER
+                                        || dataType == DataType.DOUBLE
+                                        || dataType == DataType.FLOAT)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            } else {
+                                constant = Constant.class.cast(operandTwo);
+                            }
+                            return FilterBuilders
+                                    .rangeFilter(reference.columnIdentifier.toString())
+                                    .gte(this.parseConstantValue(constant, reference))
+                                    .cache(this.elasticsearchCacheEnabled);
+                        } else {
+                            operandTwo = ((NegativeExpression) operandTwo).getOperandExpression(0);
+                            if (operandTwo instanceof Constant) {
+                                final Constant constant = (Constant) operandTwo;
+                                switch (constant.dataType) {
+                                    case LONG:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gte((Long) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case DOUBLE:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gte((Double) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case INTEGER:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gte((Integer) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case FLOAT:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gte((Float) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    default:
+                                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            }
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
                     }
                     throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
 
@@ -289,25 +510,129 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 this.context.argumentValue((Argument) operandTwo)
                         );
                     }
-                    if (operandOne instanceof Constant) {
+                    if (operandOne instanceof Constant
+                            || operandOne instanceof NegativeExpression
+                            || operandOne instanceof PositiveExpression) {
                         if (!(operandTwo instanceof Reference)) {
                             throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandTwo);
-                        final Constant constant = Constant.class.cast(operandOne);
-                        return FilterBuilders
-                                .rangeFilter(reference.columnIdentifier.toString())
-                                .gte(this.parseConstantValue(constant, reference));
+                        if (operandOne instanceof Constant
+                                || operandOne instanceof PositiveExpression) {
+                            final Constant constant;
+                            if (operandOne instanceof PositiveExpression) {
+                                operandOne = ((PositiveExpression) operandOne).getOperandExpression(0);
+                                if (!(operandOne instanceof Constant)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                                constant = (Constant) operandOne;
+                                final DataType dataType = constant.dataType;
+                                if (!(dataType == DataType.LONG
+                                        || dataType == DataType.INTEGER
+                                        || dataType == DataType.DOUBLE
+                                        || dataType == DataType.FLOAT)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            } else {
+                                constant = Constant.class.cast(operandOne);
+                            }
+                            return FilterBuilders
+                                    .rangeFilter(reference.columnIdentifier.toString())
+                                    .gte(this.parseConstantValue(constant, reference))
+                                    .cache(this.elasticsearchCacheEnabled);
+                        } else {
+                            operandOne = ((NegativeExpression) operandOne).getOperandExpression(0);
+                            if (operandOne instanceof Constant) {
+                                final Constant constant = (Constant) operandOne;
+                                switch (constant.dataType) {
+                                    case LONG:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gte((Long) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case DOUBLE:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gte((Double) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case INTEGER:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gte((Integer) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case FLOAT:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gte((Float) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    default:
+                                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            }
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
                     }
-                    if (operandTwo instanceof Constant) {
+                    if (operandTwo instanceof Constant
+                            || operandTwo instanceof PositiveExpression
+                            || operandTwo instanceof NegativeExpression) {
                         if (!(operandOne instanceof Reference)) {
                             throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandOne);
-                        final Constant constant = Constant.class.cast(operandTwo);
-                        return FilterBuilders
-                                .rangeFilter(reference.columnIdentifier.toString())
-                                .lt(this.parseConstantValue(constant, reference));
+                        if (operandTwo instanceof Constant
+                                || operandTwo instanceof PositiveExpression) {
+                            final Constant constant;
+                            if (operandTwo instanceof PositiveExpression) {
+                                operandTwo = ((PositiveExpression) operandTwo).getOperandExpression(0);
+                                if (!(operandTwo instanceof Constant)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                                constant = (Constant) operandTwo;
+                                final DataType dataType = constant.dataType;
+                                if (!(dataType == DataType.LONG
+                                        || dataType == DataType.INTEGER
+                                        || dataType == DataType.DOUBLE
+                                        || dataType == DataType.FLOAT)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            } else {
+                                constant = Constant.class.cast(operandTwo);
+                            }
+                            return FilterBuilders
+                                    .rangeFilter(reference.columnIdentifier.toString())
+                                    .lt(this.parseConstantValue(constant, reference))
+                                    .cache(this.elasticsearchCacheEnabled);
+                        } else {
+                            operandTwo = ((NegativeExpression) operandTwo).getOperandExpression(0);
+                            if (operandTwo instanceof Constant) {
+                                final Constant constant = (Constant) operandTwo;
+                                switch (constant.dataType) {
+                                    case LONG:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lt((Long) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case DOUBLE:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lt((Double) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case INTEGER:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lt((Integer) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case FLOAT:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lt((Float) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    default:
+                                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            }
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
                     }
                     throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
 
@@ -325,25 +650,129 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 this.context.argumentValue((Argument) operandTwo)
                         );
                     }
-                    if (operandOne instanceof Constant) {
+                    if (operandOne instanceof Constant
+                            || operandOne instanceof PositiveExpression
+                            || operandOne instanceof NegativeExpression) {
                         if (!(operandTwo instanceof Reference)) {
                             throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandTwo);
-                        final Constant constant = Constant.class.cast(operandOne);
-                        return FilterBuilders
-                                .rangeFilter(reference.columnIdentifier.toString())
-                                .gt(this.parseConstantValue(constant, reference));
+                        if (operandOne instanceof Constant
+                                || operandOne instanceof PositiveExpression) {
+                            final Constant constant;
+                            if (operandOne instanceof PositiveExpression) {
+                                operandOne = ((PositiveExpression) operandOne).getOperandExpression(0);
+                                if (!(operandOne instanceof Constant)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                                constant = (Constant) operandOne;
+                                final DataType dataType = constant.dataType;
+                                if (!(dataType == DataType.LONG
+                                        || dataType == DataType.INTEGER
+                                        || dataType == DataType.DOUBLE
+                                        || dataType == DataType.FLOAT)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            } else {
+                                constant = Constant.class.cast(operandOne);
+                            }
+                            return FilterBuilders
+                                    .rangeFilter(reference.columnIdentifier.toString())
+                                    .gt(this.parseConstantValue(constant, reference))
+                                    .cache(this.elasticsearchCacheEnabled);
+                        } else {
+                            operandOne = ((NegativeExpression) operandOne).getOperandExpression(0);
+                            if (operandOne instanceof Constant) {
+                                final Constant constant = (Constant) operandOne;
+                                switch (constant.dataType) {
+                                    case LONG:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gt((Long) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case DOUBLE:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gt((Double) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case INTEGER:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gt((Integer) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case FLOAT:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .gt((Float) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    default:
+                                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            }
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
 
-                    } else if (operandTwo instanceof Constant) {
+                    } else if (operandTwo instanceof Constant
+                            || operandTwo instanceof PositiveExpression
+                            || operandTwo instanceof NegativeExpression) {
                         if (!(operandOne instanceof Reference)) {
                             throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandOne);
-                        final Constant constant = Constant.class.cast(operandTwo);
-                        return FilterBuilders
-                                .rangeFilter(reference.columnIdentifier.toString())
-                                .lte(this.parseConstantValue(constant, reference));
+                        if (operandTwo instanceof Constant
+                                || operandTwo instanceof PositiveExpression) {
+                            final Constant constant;
+                            if (operandTwo instanceof PositiveExpression) {
+                                operandTwo = ((PositiveExpression) operandTwo).getOperandExpression(0);
+                                if (!(operandTwo instanceof Constant)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                                constant = (Constant) operandTwo;
+                                final DataType dataType = constant.dataType;
+                                if (!(dataType == DataType.LONG
+                                        || dataType == DataType.INTEGER
+                                        || dataType == DataType.DOUBLE
+                                        || dataType == DataType.FLOAT)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            } else {
+                                constant = Constant.class.cast(operandTwo);
+                            }
+                            return FilterBuilders
+                                    .rangeFilter(reference.columnIdentifier.toString())
+                                    .lte(this.parseConstantValue(constant, reference))
+                                    .cache(this.elasticsearchCacheEnabled);
+                        } else {
+                            operandTwo = ((NegativeExpression) operandTwo).getOperandExpression(0);
+                            if (operandTwo instanceof Constant) {
+                                final Constant constant = (Constant) operandTwo;
+                                switch (constant.dataType) {
+                                    case LONG:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lte((Long) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case DOUBLE:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lte((Double) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case INTEGER:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lte((Integer) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    case FLOAT:
+                                        return FilterBuilders
+                                                .rangeFilter(reference.columnIdentifier.toString())
+                                                .lte((Float) constant.value * -1)
+                                                .cache(this.elasticsearchCacheEnabled);
+                                    default:
+                                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            }
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
                     }
                     throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
 
@@ -361,26 +790,108 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 this.context.argumentValue((Argument) operandTwo)
                         );
                     }
-                    if (operandOne instanceof Constant) {
+                    if (operandOne instanceof Constant
+                            || operandOne instanceof PositiveExpression
+                            || operandOne instanceof NegativeExpression) {
                         if (!(operandTwo instanceof Reference)) {
                             throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                         final Reference reference = Reference.class.cast(operandTwo);
-                        final Constant constant = Constant.class.cast(operandOne);
                         final FieldDefinition fieldDefinition
                                 = this.context.typeDefinition.getFieldDefinition(reference.columnIdentifier);
-                        if (fieldDefinition.isPrimaryField()) {
-                            return FilterBuilders
-                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
-                                    .ids(this.parseConstantValue(constant, reference).toString());
+                        if (operandOne instanceof Constant
+                                || operandOne instanceof PositiveExpression) {
+                            final Constant constant;
+                            if (operandOne instanceof PositiveExpression) {
+                                operandOne = ((PositiveExpression) operandOne).getOperandExpression(0);
+                                if (!(operandOne instanceof Constant)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                                constant = (Constant) operandOne;
+                                final DataType dataType = constant.dataType;
+                                if (!(dataType == DataType.LONG
+                                        || dataType == DataType.INTEGER
+                                        || dataType == DataType.DOUBLE
+                                        || dataType == DataType.FLOAT)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            } else {
+                                constant = Constant.class.cast(operandOne);
+                            }
+                            if (fieldDefinition.isPrimaryField()) {
+                                return FilterBuilders
+                                        .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                        .ids(this.parseConstantValue(constant, reference).toString());
+                            } else {
+                                return FilterBuilders
+                                        .termFilter(
+                                                reference.columnIdentifier.toString(),
+                                                this.parseConstantValue(constant, reference)
+                                        ).cache(this.elasticsearchCacheEnabled);
+                            }
                         } else {
-                            return FilterBuilders.termFilter(
-                                    reference.columnIdentifier.toString(),
-                                    this.parseConstantValue(constant, reference)
-                            );
+                            operandOne = ((NegativeExpression) operandOne).getOperandExpression(0);
+                            if (operandOne instanceof Constant) {
+                                final Constant constant = (Constant) operandOne;
+                                switch (constant.dataType) {
+                                    case LONG:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                    .ids(String.valueOf((Long) constant.value * -1));
+                                        } else {
+                                            return FilterBuilders
+                                                    .termFilter(
+                                                            reference.columnIdentifier.toString(),
+                                                            (Long) constant.value * -1
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    case DOUBLE:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                    .ids(String.valueOf((Double) constant.value * -1));
+                                        } else {
+                                            return FilterBuilders
+                                                    .termFilter(
+                                                            reference.columnIdentifier.toString(),
+                                                            (Double) constant.value * -1
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    case INTEGER:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                    .ids(String.valueOf((Integer) constant.value * -1));
+                                        } else {
+                                            return FilterBuilders
+                                                    .termFilter(
+                                                            reference.columnIdentifier.toString(),
+                                                            (Integer) constant.value * -1
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    case FLOAT:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                    .ids(String.valueOf((Float) constant.value * -1));
+                                        } else {
+                                            return FilterBuilders
+                                                    .termFilter(
+                                                            reference.columnIdentifier.toString(),
+                                                            (Float) constant.value * -1
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    default:
+                                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            }
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                     }
-                    if (operandTwo instanceof Constant) {
+                    if (operandTwo instanceof Constant
+                            || operandTwo instanceof PositiveExpression
+                            || operandTwo instanceof NegativeExpression) {
                         if (!(operandOne instanceof Reference)) {
                             throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
@@ -388,16 +899,92 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         final Identifier columnIdentifier = reference.columnIdentifier;
                         final FieldDefinition fieldDefinition
                                 = this.context.typeDefinition.getFieldDefinition(columnIdentifier);
-                        final Constant constant = Constant.class.cast(operandTwo);
-                        if (fieldDefinition.isPrimaryField()) {
-                            return FilterBuilders
-                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
-                                    .ids(this.parseConstantValue(constant, reference).toString());
+                        if (operandTwo instanceof Constant
+                                || operandTwo instanceof PositiveExpression) {
+                            final Constant constant;
+                            if (operandTwo instanceof PositiveExpression) {
+                                operandTwo = ((PositiveExpression) operandTwo).getOperandExpression(0);
+                                if (!(operandTwo instanceof Constant)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                                constant = (Constant) operandTwo;
+                                final DataType dataType = constant.dataType;
+                                if (!(dataType == DataType.LONG || dataType == DataType.INTEGER
+                                        || dataType == DataType.DOUBLE || dataType == DataType.FLOAT)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            } else {
+                                constant = Constant.class.cast(operandTwo);
+                            }
+                            if (fieldDefinition.isPrimaryField()) {
+                                return FilterBuilders
+                                        .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                        .ids(this.parseConstantValue(constant, reference).toString());
+                            } else {
+                                return FilterBuilders
+                                        .termFilter(
+                                                columnIdentifier.toString(),
+                                                this.parseConstantValue(constant, reference)
+                                        ).cache(this.elasticsearchCacheEnabled);
+                            }
                         } else {
-                            return FilterBuilders.termFilter(
-                                    columnIdentifier.toString(),
-                                    this.parseConstantValue(constant, reference)
-                            );
+                            operandTwo = ((NegativeExpression) operandTwo).getOperandExpression(0);
+                            if (operandTwo instanceof Constant) {
+                                final Constant constant = (Constant) operandTwo;
+                                switch (constant.dataType) {
+                                    case LONG:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                    .ids(String.valueOf((Long) constant.value * -1));
+                                        } else {
+                                            return FilterBuilders
+                                                    .termFilter(
+                                                            reference.columnIdentifier.toString(),
+                                                            (Long) constant.value * -1
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    case DOUBLE:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                    .ids(String.valueOf((Double) constant.value * -1));
+                                        } else {
+                                            return FilterBuilders
+                                                    .termFilter(
+                                                            reference.columnIdentifier.toString(),
+                                                            (Double) constant.value * -1
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    case INTEGER:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                    .ids(String.valueOf((Integer) constant.value * -1));
+                                        } else {
+                                            return FilterBuilders
+                                                    .termFilter(
+                                                            reference.columnIdentifier.toString(),
+                                                            (Integer) constant.value * -1
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    case FLOAT:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                    .ids(String.valueOf((Float) constant.value * -1));
+                                        } else {
+                                            return FilterBuilders
+                                                    .termFilter(
+                                                            reference.columnIdentifier.toString(),
+                                                            (Float) constant.value * -1
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    default:
+                                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            }
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                     }
                     throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
@@ -416,7 +1003,9 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 this.context.argumentValue((Argument) operandTwo)
                         );
                     }
-                    if (operandOne instanceof Constant) {
+                    if (operandOne instanceof Constant
+                            || operandOne instanceof PositiveExpression
+                            || operandOne instanceof NegativeExpression) {
                         if (!(operandTwo instanceof Reference)) {
                             throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
@@ -424,23 +1013,127 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         final Identifier columnIdentifier = reference.columnIdentifier;
                         final FieldDefinition fieldDefinition
                                 = this.context.typeDefinition.getFieldDefinition(columnIdentifier);
-                        final Constant constant = Constant.class.cast(operandOne);
-                        if (fieldDefinition.isPrimaryField()) {
-                            return FilterBuilders.notFilter(
-                                    FilterBuilders
-                                            .idsFilter(this.context.typeDefinition.getIdentifier().toString())
-                                            .ids(this.parseConstantValue(constant, reference).toString())
-                            );
+                        if (operandOne instanceof Constant
+                                || operandOne instanceof PositiveExpression) {
+                            final Constant constant;
+                            if (operandOne instanceof PositiveExpression) {
+                                operandOne = ((PositiveExpression) operandOne).getOperandExpression(0);
+                                if (!(operandOne instanceof Constant)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                                constant = (Constant) operandOne;
+                                final DataType dataType = constant.dataType;
+                                if (!(dataType == DataType.LONG || dataType == DataType.INTEGER
+                                        || dataType == DataType.DOUBLE || dataType == DataType.FLOAT)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            } else {
+                                constant = Constant.class.cast(operandOne);
+                            }
+                            if (fieldDefinition.isPrimaryField()) {
+                                return FilterBuilders
+                                        .notFilter(
+                                                FilterBuilders
+                                                        .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                        .ids(this.parseConstantValue(constant, reference).toString())
+                                        ).cache(this.elasticsearchCacheEnabled);
+                            } else {
+                                return FilterBuilders
+                                        .notFilter(
+                                                FilterBuilders
+                                                        .termFilter(
+                                                                columnIdentifier.toString(),
+                                                                this.parseConstantValue(constant, reference)
+                                                        ).cache(this.elasticsearchCacheEnabled)
+                                        ).cache(this.elasticsearchCacheEnabled);
+                            }
                         } else {
-                            return FilterBuilders.notFilter(
-                                    FilterBuilders.termFilter(
-                                            columnIdentifier.toString(),
-                                            this.parseConstantValue(constant, reference)
-                                    )
-                            );
+                            operandOne = ((NegativeExpression) operandOne).getOperandExpression(0);
+                            if (operandOne instanceof Constant) {
+                                final Constant constant = Constant.class.cast(operandOne);
+                                switch (constant.dataType) {
+                                    case LONG:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                                    .ids(String.valueOf((Long) constant.value * -1))
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        } else {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .termFilter(
+                                                                            columnIdentifier.toString(),
+                                                                            (Long) constant.value * -1
+                                                                    ).cache(this.elasticsearchCacheEnabled)
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    case INTEGER:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                                    .ids(String.valueOf((Integer) constant.value * -1))
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        } else {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .termFilter(
+                                                                            columnIdentifier.toString(),
+                                                                            (Integer) constant.value * -1
+                                                                    ).cache(this.elasticsearchCacheEnabled)
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    case DOUBLE:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                                    .ids(String.valueOf((Double) constant.value * -1))
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        } else {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .termFilter(
+                                                                            columnIdentifier.toString(),
+                                                                            (Double) constant.value * -1
+                                                                    ).cache(this.elasticsearchCacheEnabled)
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    case FLOAT:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                                    .ids(String.valueOf((Float) constant.value * -1))
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        } else {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .termFilter(
+                                                                            columnIdentifier.toString(),
+                                                                            (Float) constant.value * -1
+                                                                    ).cache(this.elasticsearchCacheEnabled)
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    default:
+                                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            }
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                     }
-                    if (operandTwo instanceof Constant) {
+                    if (operandTwo instanceof Constant
+                            || operandTwo instanceof PositiveExpression
+                            || operandTwo instanceof NegativeExpression) {
                         if (!(operandOne instanceof Reference)) {
                             throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
@@ -448,20 +1141,122 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                         final Identifier columnIdentifier = reference.columnIdentifier;
                         final FieldDefinition fieldDefinition
                                 = this.context.typeDefinition.getFieldDefinition(columnIdentifier);
-                        final Constant constant = Constant.class.cast(operandTwo);
-                        if (fieldDefinition.isPrimaryField()) {
-                            return FilterBuilders.notFilter(
-                                    FilterBuilders
-                                            .idsFilter(this.context.typeDefinition.getIdentifier().toString())
-                                            .ids(this.parseConstantValue(constant, reference).toString())
-                            );
+                        if (operandTwo instanceof Constant
+                                || operandTwo instanceof PositiveExpression) {
+                            final Constant constant;
+                            if (operandTwo instanceof PositiveExpression) {
+                                operandTwo = ((PositiveExpression) operandTwo).getOperandExpression(0);
+                                if (!(operandTwo instanceof Constant)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                                constant = (Constant) operandTwo;
+                                final DataType dataType = constant.dataType;
+                                if (!(dataType == DataType.LONG || dataType == DataType.INTEGER
+                                        || dataType == DataType.DOUBLE || dataType == DataType.FLOAT)) {
+                                    throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            } else {
+                                constant = Constant.class.cast(operandTwo);
+                            }
+                            if (fieldDefinition.isPrimaryField()) {
+                                return FilterBuilders
+                                        .notFilter(
+                                                FilterBuilders
+                                                        .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                        .ids(this.parseConstantValue(constant, reference).toString())
+                                        ).cache(this.elasticsearchCacheEnabled);
+                            } else {
+                                return FilterBuilders
+                                        .notFilter(
+                                                FilterBuilders
+                                                        .termFilter(
+                                                                columnIdentifier.toString(),
+                                                                this.parseConstantValue(constant, reference)
+                                                        ).cache(this.elasticsearchCacheEnabled)
+                                        ).cache(this.elasticsearchCacheEnabled);
+                            }
                         } else {
-                            return FilterBuilders.notFilter(
-                                    FilterBuilders.termFilter(
-                                            columnIdentifier.toString(),
-                                            this.parseConstantValue(constant, reference)
-                                    )
-                            );
+                            operandTwo = ((NegativeExpression) operandTwo).getOperandExpression(0);
+                            if (operandTwo instanceof Constant) {
+                                final Constant constant = (Constant) operandTwo;
+                                switch (constant.dataType) {
+                                    case LONG:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                                    .ids(String.valueOf((Long) constant.value * -1))
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        } else {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .termFilter(
+                                                                            columnIdentifier.toString(),
+                                                                            (Long) constant.value * -1
+                                                                    ).cache(this.elasticsearchCacheEnabled)
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    case INTEGER:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                                    .ids(String.valueOf((Integer) constant.value * -1))
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        } else {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .termFilter(
+                                                                            columnIdentifier.toString(),
+                                                                            (Integer) constant.value * -1
+                                                                    ).cache(this.elasticsearchCacheEnabled)
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    case DOUBLE:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                                    .ids(String.valueOf((Double) constant.value * -1))
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        } else {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .termFilter(
+                                                                            columnIdentifier.toString(),
+                                                                            (Double) constant.value * -1
+                                                                    ).cache(this.elasticsearchCacheEnabled)
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    case FLOAT:
+                                        if (fieldDefinition.isPrimaryField()) {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .idsFilter(this.context.typeDefinition.getIdentifier().toString())
+                                                                    .ids(String.valueOf((Float) constant.value * -1))
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        } else {
+                                            return FilterBuilders
+                                                    .notFilter(
+                                                            FilterBuilders
+                                                                    .termFilter(
+                                                                            columnIdentifier.toString(),
+                                                                            (Float) constant.value * -1
+                                                                    ).cache(this.elasticsearchCacheEnabled)
+                                                    ).cache(this.elasticsearchCacheEnabled);
+                                        }
+                                    default:
+                                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                                }
+                            }
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                         }
                     }
                     throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
@@ -485,16 +1280,89 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 this.context.argumentValue((Argument) operandThree)
                         );
                     }
-                    if (!(operandTwo instanceof Constant && operandThree instanceof Constant)) {
+                    final Constant constantOne, constantTwo;
+                    if (operandTwo instanceof Constant) {
+                        constantOne = Constant.class.cast(operandTwo);
+                    } else if (operandTwo instanceof PositiveExpression) {
+                        operandTwo = ((PositiveExpression) operandTwo).getOperandExpression(0);
+                        if (!(operandTwo instanceof Constant)) {
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
+                        constantOne = Constant.class.cast(operandTwo);
+                        final DataType dataType = constantOne.dataType;
+                        if (!(dataType == DataType.LONG || dataType == DataType.INTEGER
+                                || dataType == DataType.DOUBLE || dataType == DataType.FLOAT)) {
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
+                    } else if (operandTwo instanceof NegativeExpression) {
+                        operandTwo = ((NegativeExpression) operandTwo).getOperandExpression(0);
+                        if (!(operandTwo instanceof Constant)) {
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
+                        final Constant constant = Constant.class.cast(operandTwo);
+                        switch (constant.dataType) {
+                            case LONG:
+                                constantOne = new Constant((Long) constant.value * -1);
+                                break;
+                            case INTEGER:
+                                constantOne = new Constant((Integer) constant.value * -1);
+                                break;
+                            case DOUBLE:
+                                constantOne = new Constant((Double) constant.value * -1);
+                                break;
+                            case FLOAT:
+                                constantOne = new Constant((Float) constant.value * -1);
+                                break;
+                            default:
+                                throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
+                    } else {
+                        throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                    }
+                    if (operandThree instanceof Constant) {
+                        constantTwo = Constant.class.cast(operandThree);
+                    } else if (operandThree instanceof PositiveExpression) {
+                        operandThree = ((PositiveExpression) operandThree).getOperandExpression(0);
+                        if (!(operandThree instanceof Constant)) {
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
+                        constantTwo = Constant.class.cast(operandThree);
+                        final DataType dataType = constantTwo.dataType;
+                        if (!(dataType == DataType.LONG || dataType == DataType.INTEGER
+                                || dataType == DataType.DOUBLE || dataType == DataType.FLOAT)) {
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
+                    } else if (operandThree instanceof NegativeExpression) {
+                        operandThree = ((NegativeExpression) operandThree).getOperandExpression(0);
+                        if (!(operandThree instanceof Constant)) {
+                            throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
+                        final Constant constant = Constant.class.cast(operandThree);
+                        switch (constant.dataType) {
+                            case LONG:
+                                constantTwo = new Constant((Long) constant.value * -1);
+                                break;
+                            case INTEGER:
+                                constantTwo = new Constant((Integer) constant.value * -1);
+                                break;
+                            case DOUBLE:
+                                constantTwo = new Constant((Double) constant.value * -1);
+                                break;
+                            case FLOAT:
+                                constantTwo = new Constant((Float) constant.value * -1);
+                                break;
+                            default:
+                                throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
+                        }
+                    } else {
                         throw new SQL4ESException("Unsupported expression[" + realExpression + "]");
                     }
                     final Reference reference = Reference.class.cast(operandOne);
-                    final Constant constantOne = Constant.class.cast(operandTwo);
-                    final Constant constantTwo = Constant.class.cast(operandThree);
                     return FilterBuilders
                             .rangeFilter(reference.columnIdentifier.toString())
                             .from(this.parseConstantValue(constantOne, reference))
-                            .to(this.parseConstantValue(constantTwo, reference));
+                            .to(this.parseConstantValue(constantTwo, reference))
+                            .cache(this.elasticsearchCacheEnabled);
                 } else if (expression instanceof InExpression) {
                     final InExpression realExpression = InExpression.class.cast(expression);
                     Expression operandOne = realExpression.getOperandExpression(0);
@@ -518,6 +1386,45 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                     (Constant) operandExpression,
                                     reference
                             );
+                        } else if (operandExpression instanceof PositiveExpression) {
+                            operandExpression = ((PositiveExpression) operandExpression).getOperandExpression(0);
+                            if (!(operandExpression instanceof Constant)) {
+                                throw new SQL4ESException("Unsupported expression[" + operandExpression +
+                                        "] in InExpression[" + realExpression + "]");
+                            }
+                            final Constant constant = (Constant) operandExpression;
+                            final DataType dataType = constant.dataType;
+                            if (!(dataType == DataType.LONG || dataType == DataType.INTEGER
+                                    || dataType == DataType.DOUBLE || dataType == DataType.FLOAT)) {
+                                throw new SQL4ESException("Unsupported expression[" + operandExpression +
+                                        "] in InExpression[" + realExpression + "]");
+                            }
+                            values[index] = constant;
+                        } else if (operandExpression instanceof NegativeExpression) {
+                            operandExpression = ((NegativeExpression) operandExpression).getOperandExpression(0);
+                            if (!(operandExpression instanceof Constant)) {
+                                throw new SQL4ESException("Unsupported expression[" + operandExpression +
+                                        "] in InExpression[" + realExpression + "]");
+                            }
+                            final Constant constant = (Constant) operandExpression;
+                            final DataType dataType = constant.dataType;
+                            switch (dataType) {
+                                case LONG:
+                                    values[index] = new Constant((Long) constant.value * -1);
+                                    break;
+                                case INTEGER:
+                                    values[index] = new Constant((Integer) constant.value * -1);
+                                    break;
+                                case DOUBLE:
+                                    values[index] = new Constant((Double) constant.value * -1);
+                                    break;
+                                case FLOAT:
+                                    values[index] = new Constant((Float) constant.value * -1);
+                                    break;
+                                default:
+                                    throw new SQL4ESException("Unsupported expression[" + operandExpression +
+                                            "] in InExpression[" + realExpression + "]");
+                            }
                         } else {
                             throw new SQL4ESException("Unsupported expression[" + operandExpression +
                                     "] in InExpression[" + realExpression + "]");
@@ -534,7 +1441,9 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                                 .idsFilter(this.context.tableIdentifier.toString())
                                 .ids(ids);
                     } else {
-                        return FilterBuilders.termsFilter(reference.columnIdentifier.toString(), values);
+                        return FilterBuilders
+                                .termsFilter(reference.columnIdentifier.toString(), values)
+                                .cache(this.elasticsearchCacheEnabled);
                     }
                 } else if (expression instanceof LikeExpression) {
                     final LikeExpression realExpression = (LikeExpression) expression;
@@ -548,7 +1457,12 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     if (operandTwo instanceof Argument) {
                         value = this.context.argumentValue((Argument) operandTwo).toString();
                     } else if (operandTwo instanceof Constant) {
-                        value = ((Constant) operandTwo).value.toString();
+                        final Constant constant = (Constant) operandTwo;
+                        if (constant.dataType != DataType.STRING) {
+                            throw new SQL4ESException("Unsupported expression[" + operandTwo +
+                                    "] in LikeExpression[" + realExpression + "]");
+                        }
+                        value = constant.value.toString();
                     } else {
                         throw new SQL4ESException("Unsupported expression[" + operandTwo +
                                 "] in LikeExpression[" + realExpression + "]");
@@ -630,16 +1544,17 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                     if (percentCount == 1 && value.endsWith("%")) {
                         final char[] destination = new char[percentIndex];
                         System.arraycopy(characters, 0, destination, 0, percentIndex);
-                        return FilterBuilders.prefixFilter(
-                                ((Reference) operandOne).columnIdentifier.toString(),
-                                new String(destination)
-                        );
+                        return FilterBuilders
+                                .prefixFilter(
+                                        ((Reference) operandOne).columnIdentifier.toString(),
+                                        new String(destination)
+                                ).cache(this.elasticsearchCacheEnabled);
                     } else {
                         return FilterBuilders
                                 .regexpFilter(
                                         ((Reference) operandOne).columnIdentifier.toString(),
                                         builder.toString()
-                                ).flags(RegexpFlag.NONE);
+                                ).flags(RegexpFlag.NONE).cache(this.elasticsearchCacheEnabled);
                     }
                 } else {
                     throw new SQL4ESException("Unsupported expression[" + expression + "]");

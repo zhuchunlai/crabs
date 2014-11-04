@@ -473,4 +473,88 @@ public class GrammarAnalyzerTest {
         System.out.println(statement);
     }
 
+    @Test
+    public final void testAnalyzeSelectStatement_OK_WhereCondition_Priority() throws Exception {
+        final String sql = "select sum(num_user_the_years), sum(mobile_idx) " +
+                "from user_profile " +
+                "where user_log_acct like 'a%' " +
+                "or user_log_acct like 'b%' " +
+                "or user_log_acct like 'c%' " +
+                "or user_log_acct like 'd%' " +
+                "or user_log_acct like 'e%' " +
+                "or user_log_acct like 'f%' " +
+                "group by num_user_the_years, mobile_idx";
+        final Statement actual = GrammarAnalyzer.analyze(sql);
+        final Statement expected = new SelectStatement(
+                new SelectClause(
+                        false,
+                        null,
+                        new SelectClause.ResultColumnDeclare(
+                                (String) null,
+                                new SummaryFunction(
+                                        new Reference(
+                                                null,
+                                                "num_user_the_years"
+                                        )
+                                )
+                        ),
+                        new SelectClause.ResultColumnDeclare(
+                                (String) null,
+                                new SummaryFunction(
+                                        new Reference(
+                                                null,
+                                                "mobile_idx"
+                                        )
+                                )
+                        )),
+                new FromClause(
+                        new FromClause.SimpleTableDeclare(null, "user_profile")
+                ),
+                new WhereClause(
+                        new OrExpression(
+                                new OrExpression(
+                                        new OrExpression(
+                                                new OrExpression(
+                                                        new OrExpression(
+                                                                new LikeExpression(
+                                                                        new Reference(null, "user_log_acct"),
+                                                                        new Constant("a%")
+                                                                ),
+                                                                new LikeExpression(
+                                                                        new Reference(null, "user_log_acct"),
+                                                                        new Constant("b%")
+                                                                )
+                                                        ),
+                                                        new LikeExpression(
+                                                                new Reference(null, "user_log_acct"),
+                                                                new Constant("c%")
+                                                        )
+                                                ),
+                                                new LikeExpression(
+                                                        new Reference(null, "user_log_acct"),
+                                                        new Constant("d%")
+                                                )
+                                        ),
+                                        new LikeExpression(
+                                                new Reference(null, "user_log_acct"),
+                                                new Constant("e%")
+                                        )
+                                ),
+                                new LikeExpression(
+                                        new Reference(null, "user_log_acct"),
+                                        new Constant("f%")
+                                )
+                        )
+                ),
+                new GroupByClause(
+                        new Reference(null, "num_user_the_years"),
+                        new Reference(null, "mobile_idx")
+                ),
+                null,
+                null,
+                null
+        );
+        assertEquals(expected, actual);
+    }
+
 }

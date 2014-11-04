@@ -150,6 +150,9 @@ public final class Protocol {
     public static final PropertyEntry PROPERTY_ENTRY$OUTPUT_SQL_ES_MAPPING
             = new PropertyEntry("outputSQLElasticsearchMapping", 1, String.valueOf(Boolean.TRUE), "Output SQL and ES request mapping.");
 
+    public static final PropertyEntry PROPERTY_ENTRY$ES_CACHE_ENABLED
+            = new PropertyEntry("elasticsearchCacheEnabled", 1, String.valueOf(Boolean.TRUE), "Enable elasticsearch cache");
+
     // =======================================================
 
     static final int RESULT_SET_TYPE = ResultSet.TYPE_FORWARD_ONLY;
