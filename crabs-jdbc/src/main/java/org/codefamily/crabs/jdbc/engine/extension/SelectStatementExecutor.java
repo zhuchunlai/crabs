@@ -1,7 +1,5 @@
 package org.codefamily.crabs.jdbc.engine.extension;
 
-import org.codefamily.crabs.util.ExtensionClassCollector;
-import org.codefamily.crabs.util.ReadonlyList;
 import org.codefamily.crabs.core.DataType;
 import org.codefamily.crabs.core.Identifier;
 import org.codefamily.crabs.core.IndexDefinition;
@@ -27,6 +25,8 @@ import org.codefamily.crabs.jdbc.lang.extension.clause.OrderByClause.OrderSpecif
 import org.codefamily.crabs.jdbc.lang.extension.clause.SelectClause.ResultColumnDeclare;
 import org.codefamily.crabs.jdbc.lang.extension.expression.*;
 import org.codefamily.crabs.jdbc.lang.extension.statement.SelectStatement;
+import org.codefamily.crabs.util.ExtensionClassCollector;
+import org.codefamily.crabs.util.ReadonlyList;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.*;
@@ -2637,10 +2637,11 @@ public final class SelectStatementExecutor extends StatementExecutor<SelectState
                 final CountFunction count = CountFunction.class.cast(aggregation);
                 final Reference operand = Reference.class.cast(count.getOperandExpression(0));
                 if (operand.columnIdentifier.equals(Reference.ALL_COLUMN_IDENTIFIER)) {
+                    // bug-fix: 基于主键进行count计算，从而避免了因非主键列存在null导致计算不准确
                     return AggregationBuilders
                             .count(name)
                             .field(
-                                    this.context.typeDefinition.getFieldDefinition(0).getIdentifier().toString()
+                                    this.context.typeDefinition.getPrimaryFieldDefinition().getIdentifier().toString()
                             );
                 }
                 return AggregationBuilders
