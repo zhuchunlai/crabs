@@ -1,9 +1,9 @@
 package org.codefamily.crabs.jdbc.lang;
 
-import org.codefamily.crabs.common.util.ReadonlyList;
+import org.codefamily.crabs.util.ReadonlyList;
 import org.codefamily.crabs.core.DataType;
 import org.codefamily.crabs.jdbc.lang.expression.context.Context;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 
 public abstract class Expression {
 
@@ -17,13 +17,13 @@ public abstract class Expression {
 
     private ReadonlyList<Expression> operandExpressionList;
 
-    public abstract DataType getResultType() throws SQL4ESException;
+    public abstract DataType getResultType() throws CrabsException;
 
-    public DataType getResultType(Context context) throws SQL4ESException {
+    public DataType getResultType(Context context) throws CrabsException {
         return this.getResultType();
     }
 
-    public final ReadonlyList<Expression> getOperandExpressionList() throws SQL4ESException {
+    public final ReadonlyList<Expression> getOperandExpressionList() throws CrabsException {
         if (this.operandExpressionList == null) {
             this.operandExpressionList = this.doGetOperandExpressionList();
         }
@@ -47,7 +47,7 @@ public abstract class Expression {
         if (this.string == null) {
             try {
                 this.string = this.doToString();
-            } catch (SQL4ESException e) {
+            } catch (CrabsException e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
         }
@@ -75,13 +75,13 @@ public abstract class Expression {
                 }
             }
             return false;
-        } catch (SQL4ESException e) {
+        } catch (CrabsException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    protected abstract ReadonlyList<Expression> doGetOperandExpressionList() throws SQL4ESException;
+    protected abstract ReadonlyList<Expression> doGetOperandExpressionList() throws CrabsException;
 
-    protected abstract String doToString() throws SQL4ESException;
+    protected abstract String doToString() throws CrabsException;
 
 }

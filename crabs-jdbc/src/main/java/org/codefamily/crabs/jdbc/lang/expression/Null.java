@@ -1,8 +1,8 @@
 package org.codefamily.crabs.jdbc.lang.expression;
 
-import org.codefamily.crabs.common.util.ReadonlyList;
+import org.codefamily.crabs.util.ReadonlyList;
 import org.codefamily.crabs.core.DataType;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.lang.Expression;
 
 public final class Null extends Expression {
@@ -34,7 +34,7 @@ public final class Null extends Expression {
     }
 
     @Override
-    public DataType getResultType() throws SQL4ESException {
+    public DataType getResultType() throws CrabsException {
         return null;
     }
 

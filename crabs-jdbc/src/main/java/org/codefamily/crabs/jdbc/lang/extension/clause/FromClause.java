@@ -1,7 +1,7 @@
 package org.codefamily.crabs.jdbc.lang.extension.clause;
 
-import org.codefamily.crabs.common.util.ReadonlyList;
-import org.codefamily.crabs.common.util.StringUtils;
+import org.codefamily.crabs.util.ReadonlyList;
+import org.codefamily.crabs.util.StringUtils;
 import org.codefamily.crabs.core.Identifier;
 import org.codefamily.crabs.jdbc.lang.Clause;
 import org.codefamily.crabs.jdbc.lang.Keyword;

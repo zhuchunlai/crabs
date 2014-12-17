@@ -1,4 +1,4 @@
-package org.codefamily.crabs.common.util;
+package org.codefamily.crabs.util;
 
 /**
  * 字符处理工具

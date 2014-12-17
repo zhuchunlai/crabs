@@ -1,7 +1,7 @@
 package org.codefamily.crabs.jdbc.lang.expression.util;
 
-import org.codefamily.crabs.common.util.ReadonlyList;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.util.ReadonlyList;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.lang.Expression;
 import org.codefamily.crabs.jdbc.lang.expression.Aggregation;
 import org.codefamily.crabs.jdbc.lang.expression.Argument;
@@ -36,9 +36,9 @@ public final class ExpressionHelper {
     /**
      * Get reference expressions in specified expression.
      *
-     * @throws SQL4ESException
+     * @throws org.codefamily.crabs.exception.CrabsException
      */
-    public static Reference[] getReferences(final Expression expression) throws SQL4ESException {
+    public static Reference[] getReferences(final Expression expression) throws CrabsException {
         if (expression == null) {
             throw new IllegalArgumentException("Argument [expession] is null.");
         }
@@ -50,10 +50,10 @@ public final class ExpressionHelper {
     /**
      * Get reference expressions in specified expression.
      *
-     * @throws SQL4ESException
+     * @throws org.codefamily.crabs.exception.CrabsException
      */
     public static void getReferences(final Expression expression,
-                                     final ArrayList<Reference> referenceList) throws SQL4ESException {
+                                     final ArrayList<Reference> referenceList) throws CrabsException {
         if (expression == null) {
             throw new IllegalArgumentException("Argument [expession] is null.");
         }
@@ -67,9 +67,9 @@ public final class ExpressionHelper {
     /**
      * Get reference expressions in specified expression.
      *
-     * @throws SQL4ESException
+     * @throws org.codefamily.crabs.exception.CrabsException
      */
-    public static Aggregation[] getAggregations(final Expression expression) throws SQL4ESException {
+    public static Aggregation[] getAggregations(final Expression expression) throws CrabsException {
         if (expression == null) {
             throw new IllegalArgumentException("Argument[expression] is null.");
         }
@@ -81,10 +81,10 @@ public final class ExpressionHelper {
     /**
      * Get reference expressions in specified expression.
      *
-     * @throws SQL4ESException
+     * @throws org.codefamily.crabs.exception.CrabsException
      */
     public static void getAggregations(final Expression expression,
-                                       final ArrayList<Aggregation> aggregationList) throws SQL4ESException {
+                                       final ArrayList<Aggregation> aggregationList) throws CrabsException {
         if (expression == null) {
             throw new IllegalArgumentException("Argument[expression] is null.");
         }
@@ -95,7 +95,7 @@ public final class ExpressionHelper {
         doGetAggregation(aggregationList, expression);
     }
 
-    public static int getArgumentCount(final Expression expression) throws SQL4ESException {
+    public static int getArgumentCount(final Expression expression) throws CrabsException {
         if (expression == null) {
             throw new IllegalArgumentException("Argument[expression] is null.");
         }
@@ -103,7 +103,7 @@ public final class ExpressionHelper {
     }
 
     private static void doGetReference(final ArrayList<Reference> referenceList,
-                                       final Expression expression) throws SQL4ESException {
+                                       final Expression expression) throws CrabsException {
         final Class<? extends Expression> expressionClass = expression.getClass();
         if (expressionClass == Reference.class) {
             referenceList.add((Reference) expression);
@@ -118,7 +118,7 @@ public final class ExpressionHelper {
     }
 
     private static void doGetAggregation(final ArrayList<Aggregation> aggregationList,
-                                         final Expression expression) throws SQL4ESException {
+                                         final Expression expression) throws CrabsException {
         if (expression instanceof Aggregation) {
             aggregationList.add((Aggregation) expression);
         } else {
@@ -131,7 +131,7 @@ public final class ExpressionHelper {
         }
     }
 
-    private static int doGetArgumentCount(final Expression expression) throws SQL4ESException {
+    private static int doGetArgumentCount(final Expression expression) throws CrabsException {
         if (expression == null) {
             throw new IllegalArgumentException("Argument[expression] is null.");
         }

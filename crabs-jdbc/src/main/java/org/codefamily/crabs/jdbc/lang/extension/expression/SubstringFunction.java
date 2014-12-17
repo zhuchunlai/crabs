@@ -1,7 +1,7 @@
 package org.codefamily.crabs.jdbc.lang.extension.expression;
 
 import org.codefamily.crabs.core.DataType;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.lang.Expression;
 import org.codefamily.crabs.jdbc.lang.expression.Function;
 import org.codefamily.crabs.jdbc.lang.expression.NonAggregation;
@@ -28,7 +28,7 @@ public final class SubstringFunction extends NonAggregation implements Function 
 	}
 
     @Override
-    public final DataType getResultType() throws SQL4ESException {
+    public final DataType getResultType() throws CrabsException {
         return DataType.STRING;
     }
 }

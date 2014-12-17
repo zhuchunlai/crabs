@@ -1,6 +1,6 @@
 package org.codefamily.crabs.jdbc.lang.expression.util;
 
-import org.codefamily.crabs.common.ExtensionClassCollector;
+import org.codefamily.crabs.util.ExtensionClassCollector;
 import org.codefamily.crabs.jdbc.lang.Expression;
 import org.codefamily.crabs.jdbc.lang.expression.Function;
 import org.slf4j.Logger;

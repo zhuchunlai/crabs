@@ -1,7 +1,7 @@
 package org.codefamily.crabs.jdbc.lang.extension.statement;
 
-import org.codefamily.crabs.common.util.ReadonlyList;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.util.ReadonlyList;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.lang.Expression;
 import org.codefamily.crabs.jdbc.lang.Statement;
 import org.codefamily.crabs.jdbc.lang.expression.util.ExpressionHelper;
@@ -122,7 +122,7 @@ public final class SelectStatement extends Statement {
     }
 
     @Override
-    protected final int doGetParameterCount() throws SQL4ESException {
+    protected final int doGetParameterCount() throws CrabsException {
         int argumentCount = 0;
         for (Expression expression : this.getTopLevelExpressionList()) {
             argumentCount += ExpressionHelper.getArgumentCount(expression);

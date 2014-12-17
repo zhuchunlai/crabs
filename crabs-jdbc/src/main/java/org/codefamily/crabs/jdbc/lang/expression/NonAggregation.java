@@ -1,6 +1,6 @@
 package org.codefamily.crabs.jdbc.lang.expression;
 
-import org.codefamily.crabs.common.util.ReadonlyList;
+import org.codefamily.crabs.util.ReadonlyList;
 import org.codefamily.crabs.jdbc.lang.Expression;
 
 public abstract class NonAggregation extends Expression {

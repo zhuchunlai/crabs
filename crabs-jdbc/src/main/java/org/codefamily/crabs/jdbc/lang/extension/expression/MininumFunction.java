@@ -1,7 +1,7 @@
 package org.codefamily.crabs.jdbc.lang.extension.expression;
 
 import org.codefamily.crabs.core.DataType;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.lang.Expression;
 import org.codefamily.crabs.jdbc.lang.expression.Aggregation;
 import org.codefamily.crabs.jdbc.lang.expression.Function;
@@ -10,7 +10,7 @@ public final class MininumFunction extends Aggregation implements Function {
 
     public static final String IDENTIFIER = "MIN";
 
-    public MininumFunction(final Expression expression) throws SQL4ESException {
+    public MininumFunction(final Expression expression) throws CrabsException {
         super(expression);
     }
 
@@ -25,7 +25,7 @@ public final class MininumFunction extends Aggregation implements Function {
     }
 
     @Override
-    public final DataType getResultType() throws SQL4ESException {
+    public final DataType getResultType() throws CrabsException {
         return DataType.DOUBLE;
     }
 

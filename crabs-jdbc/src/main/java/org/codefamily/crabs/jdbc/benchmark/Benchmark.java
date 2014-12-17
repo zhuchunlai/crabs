@@ -7,7 +7,7 @@ import org.codefamily.crabs.core.client.AdvancedClient;
 import org.codefamily.crabs.core.client.AdvancedClient.ElasticsearchAddress;
 import org.codefamily.crabs.core.client.AdvancedClient.InternalDocumentRequestBuilder;
 import org.codefamily.crabs.core.client.AdvancedClient.ResponseCallback;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.Protocol;
 import org.elasticsearch.action.Action;
 import org.elasticsearch.action.ActionRequest;
@@ -792,7 +792,7 @@ public final class Benchmark {
         private BenchmarkInitializer(final String URL,
                                      final int documentCount,
                                      final int shardsNum,
-                                     final int replicasNum) throws SQL4ESException {
+                                     final int replicasNum) throws CrabsException {
             final Protocol protocol = Protocol.parseURL(URL);
             final ElasticsearchAddress[] elasticsearchAddresses = protocol.getServerAddresses();
             final Properties properties = protocol.getProperties();
@@ -946,7 +946,7 @@ public final class Benchmark {
                         }
                     } catch (InterruptedException e) {
                         // nothing to do.
-                    } catch (SQL4ESException e) {
+                    } catch (CrabsException e) {
                         LOG.error(e.getMessage(), e);
                     }
                 }
@@ -964,7 +964,7 @@ public final class Benchmark {
 
                 @Override
                 public final BulkRequest buildRequest(final Client client,
-                                                      final ArrayList<Document> value) throws SQL4ESException {
+                                                      final ArrayList<Document> value) throws CrabsException {
                     final BulkRequestBuilder requestBuilder = client.prepareBulk();
                     for (Document data : value) {
                         try {
@@ -983,7 +983,7 @@ public final class Benchmark {
                                             )
                             );
                         } catch (IOException e) {
-                            throw new SQL4ESException(e.getMessage(), e);
+                            throw new CrabsException(e.getMessage(), e);
                         }
                     }
                     return requestBuilder.request();
@@ -992,9 +992,9 @@ public final class Benchmark {
 
             private final class InternalDocumentResponseCallback implements ResponseCallback<BulkResponse> {
                 @Override
-                public final void callback(final BulkResponse response) throws SQL4ESException {
+                public final void callback(final BulkResponse response) throws CrabsException {
                     if (response.hasFailures()) {
-                        throw new SQL4ESException(response.buildFailureMessage());
+                        throw new CrabsException(response.buildFailureMessage());
                     }
                 }
             }

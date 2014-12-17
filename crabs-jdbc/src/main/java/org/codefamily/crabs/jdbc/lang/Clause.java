@@ -1,11 +1,11 @@
 package org.codefamily.crabs.jdbc.lang;
 
-import org.codefamily.crabs.common.util.ReadonlyList;
-import org.codefamily.crabs.common.util.StringUtils;
+import org.codefamily.crabs.util.ReadonlyList;
+import org.codefamily.crabs.util.StringUtils;
 import org.codefamily.crabs.core.Identifier;
 
-import static org.codefamily.crabs.common.Constants.WHITESPACE;
-import static org.codefamily.crabs.common.Constants.EMPTY_STRING;
+import static org.codefamily.crabs.Constants.WHITESPACE;
+import static org.codefamily.crabs.Constants.EMPTY_STRING;
 
 public abstract class Clause {
 

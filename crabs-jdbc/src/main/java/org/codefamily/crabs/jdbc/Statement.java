@@ -1,6 +1,6 @@
 package org.codefamily.crabs.jdbc;
 
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.BaseClasses.StatementBase;
 import org.codefamily.crabs.jdbc.engine.ExecuteEngine;
 import org.codefamily.crabs.jdbc.internal.InternalResultSet;
@@ -240,7 +240,7 @@ public class Statement extends StatementBase {
                     argumentValues,
                     InternalResultSet.class
             );
-        } catch (SQL4ESException e) {
+        } catch (CrabsException e) {
             throw new SQLException(e.getMessage(), e);
         }
         return this.lastResultSet = new ResultSet(this.connection, this, resultSet);
@@ -256,7 +256,7 @@ public class Statement extends StatementBase {
                     argumentValues,
                     Integer.class
             );
-        } catch (SQL4ESException e) {
+        } catch (CrabsException e) {
             throw new SQLException(e.getMessage(), e);
         }
     }

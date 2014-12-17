@@ -1,7 +1,7 @@
 package org.codefamily.crabs.core;
 
 import org.codefamily.crabs.core.exception.UnsupportedDataTypeException;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -199,12 +199,12 @@ public enum DataType {
 
         @Override
         @SuppressWarnings("unchecked")
-        public final Date toValue(final String value, final String pattern) throws SQL4ESException {
+        public final Date toValue(final String value, final String pattern) throws CrabsException {
             final SimpleDateFormat format = new SimpleDateFormat(pattern);
             try {
                 return format.parse(value);
             } catch (ParseException e) {
-                throw new SQL4ESException(e.getMessage(), e);
+                throw new CrabsException(e.getMessage(), e);
             }
         }
 
@@ -223,7 +223,7 @@ public enum DataType {
 
     public abstract String getElasticsearchType();
 
-    public abstract <T> T toValue(final String value, final String pattern) throws SQL4ESException;
+    public abstract <T> T toValue(final String value, final String pattern) throws CrabsException;
 
     public abstract int displaySize();
 

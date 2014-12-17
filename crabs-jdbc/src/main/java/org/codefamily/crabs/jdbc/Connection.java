@@ -1,14 +1,14 @@
 package org.codefamily.crabs.jdbc;
 
 import org.codefamily.crabs.Product;
-import org.codefamily.crabs.common.util.ReadonlyList;
-import org.codefamily.crabs.common.util.RegularExpressionHelper;
+import org.codefamily.crabs.util.ReadonlyList;
+import org.codefamily.crabs.util.RegularExpressionHelper;
 import org.codefamily.crabs.core.DataType;
 import org.codefamily.crabs.core.Identifier;
 import org.codefamily.crabs.core.TypeDefinition;
 import org.codefamily.crabs.core.TypeDefinition.FieldDefinition;
 import org.codefamily.crabs.core.client.AdvancedClient;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.BaseClasses.ConnectionBase;
 import org.codefamily.crabs.jdbc.Protocol.PropertyEntry;
 import org.codefamily.crabs.jdbc.compiler.GrammarAnalyzer;
@@ -40,7 +40,7 @@ public final class Connection extends ConnectionBase {
         final Protocol protocol;
         try {
             protocol = Protocol.parseURL(URL);
-        } catch (SQL4ESException e) {
+        } catch (CrabsException e) {
             throw new SQLException(e.getMessage(), e);
         }
         final Properties finallyProperties = new Properties();
@@ -55,7 +55,7 @@ public final class Connection extends ConnectionBase {
         final boolean existsIndex;
         try {
             existsIndex = advancedClient.existsIndex(connectedDatabaseIdentifier);
-        } catch (SQL4ESException ex) {
+        } catch (CrabsException ex) {
             try {
                 advancedClient.close();
             } catch (IOException ioex) {
@@ -740,7 +740,7 @@ public final class Connection extends ConnectionBase {
                         rowValues[9] = null;
                         rows.add(rowValues);
                     }
-                } catch (SQL4ESException ex) {
+                } catch (CrabsException ex) {
                     throw new SQLException(ex);
                 }
             }
@@ -845,7 +845,7 @@ public final class Connection extends ConnectionBase {
                             rows.add(rowValues);
                         }
                     }
-                } catch (SQL4ESException ex) {
+                } catch (CrabsException ex) {
                     throw new SQLException(ex);
                 }
             }
@@ -981,7 +981,7 @@ public final class Connection extends ConnectionBase {
                     rowValues[4] = (short) 1;
                     rowValues[5] = "PK_" + tableName + "_" + primaryFieldName;
                     rows.add(rowValues);
-                } catch (SQL4ESException ex) {
+                } catch (CrabsException ex) {
                     throw new SQLException(ex);
                 }
             }
@@ -1182,7 +1182,7 @@ public final class Connection extends ConnectionBase {
                     rowValues[11] = null;
                     rowValues[12] = null;
                     rows.add(rowValues);
-                } catch (SQL4ESException ex) {
+                } catch (CrabsException ex) {
                     throw new SQLException(ex);
                 }
             }
@@ -2052,7 +2052,7 @@ public final class Connection extends ConnectionBase {
             }
 
             @Override
-            public final boolean next() throws SQL4ESException {
+            public final boolean next() throws CrabsException {
                 if (this.rowIterator.hasNext()) {
                     this.currentRow = this.rowIterator.next();
                     return true;

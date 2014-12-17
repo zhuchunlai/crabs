@@ -1,9 +1,9 @@
 package org.codefamily.crabs.jdbc.engine;
 
-import org.codefamily.crabs.common.ExtensionClassCollector;
+import org.codefamily.crabs.util.ExtensionClassCollector;
 import org.codefamily.crabs.core.client.AdvancedClient;
 import org.codefamily.crabs.jdbc.lang.Statement;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 
 import java.util.Iterator;
 
@@ -14,7 +14,7 @@ public final class ExecuteEngine {
             final ExecuteEnvironment environment,
             TStatement statement,
             final Object[] argumentValues,
-            final Class<TResult> resultClass) throws SQL4ESException {
+            final Class<TResult> resultClass) throws CrabsException {
         if (advancedClient == null) {
             throw new IllegalArgumentException("Argument[advancedClient] is null.");
         }
@@ -34,7 +34,7 @@ public final class ExecuteEngine {
         final StatementExecutor<TStatement, TResult> statementExecutor
                 = STATEMENT_EXECUTOR_SET.getStatementExecutor((Class<TStatement>) (statement.getClass()), resultClass);
         if (statementExecutor == null) {
-            throw new SQL4ESException("Can not found statement execute engine for "
+            throw new CrabsException("Can not found statement execute engine for "
                     + statement.getClass().getSimpleName()
                     + ", result class " + resultClass.getName());
         }
@@ -58,7 +58,7 @@ public final class ExecuteEngine {
                         );
                     }
                 }
-            } catch (SQL4ESException e) {
+            } catch (CrabsException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -101,14 +101,14 @@ public final class ExecuteEngine {
         @SuppressWarnings("rawtypes")
         final Class<? extends StatementExecutor> registerStatementExecutor(
                 final Class<? extends StatementExecutor> statementExecutorClass)
-                throws SQL4ESException {
+                throws CrabsException {
             final StatementExecutor<?, ?> statementExecutor;
             try {
                 statementExecutor = statementExecutorClass.newInstance();
             } catch (InstantiationException e) {
-                throw new SQL4ESException(e);
+                throw new CrabsException(e);
             } catch (IllegalAccessException e) {
-                throw new SQL4ESException(e);
+                throw new CrabsException(e);
             }
             final StatementExecutor<?, ?> existedStatementExecutor
                     = getStatementExecutor(statementExecutor.statementClass, statementExecutor.resultClass);

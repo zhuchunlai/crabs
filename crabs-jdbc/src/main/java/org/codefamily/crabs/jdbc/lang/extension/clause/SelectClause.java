@@ -1,13 +1,13 @@
 package org.codefamily.crabs.jdbc.lang.extension.clause;
 
-import org.codefamily.crabs.common.util.ReadonlyList;
+import org.codefamily.crabs.util.ReadonlyList;
 import org.codefamily.crabs.core.Identifier;
 import org.codefamily.crabs.jdbc.lang.Clause;
 import org.codefamily.crabs.jdbc.lang.Expression;
 import org.codefamily.crabs.jdbc.lang.Keyword;
 import org.codefamily.crabs.jdbc.lang.extension.ReservedKeyword;
 
-import static org.codefamily.crabs.common.Constants.WHITESPACE;
+import static org.codefamily.crabs.Constants.WHITESPACE;
 
 public final class SelectClause extends Clause {
 

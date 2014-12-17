@@ -1,6 +1,6 @@
 package org.codefamily.crabs.core;
 
-import org.codefamily.crabs.common.util.StringUtils;
+import org.codefamily.crabs.util.StringUtils;
 
 /**
  * 标识类，通常用于表示特定类型实例的名称标识，如：TypeDefinition的名称标识

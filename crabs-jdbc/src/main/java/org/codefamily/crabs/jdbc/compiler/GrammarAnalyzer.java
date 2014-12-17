@@ -1,7 +1,7 @@
 package org.codefamily.crabs.jdbc.compiler;
 
-import org.codefamily.crabs.common.ExtensionClassCollector;
-import org.codefamily.crabs.common.util.ReadonlyList;
+import org.codefamily.crabs.util.ExtensionClassCollector;
+import org.codefamily.crabs.util.ReadonlyList;
 import org.codefamily.crabs.jdbc.lang.Clause;
 import org.codefamily.crabs.jdbc.lang.Clause.TableDeclare;
 import org.codefamily.crabs.jdbc.lang.Expression;

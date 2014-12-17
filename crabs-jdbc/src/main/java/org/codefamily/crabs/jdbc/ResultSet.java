@@ -1,9 +1,9 @@
 package org.codefamily.crabs.jdbc;
 
-import org.codefamily.crabs.common.Constants;
+import org.codefamily.crabs.Constants;
 import org.codefamily.crabs.core.DataType;
 import org.codefamily.crabs.core.Identifier;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.BaseClasses.ResultSetBase;
 import org.codefamily.crabs.jdbc.internal.InternalResultSet;
 import org.codefamily.crabs.jdbc.internal.InternalResultSet.InternalMetaData;
@@ -97,7 +97,7 @@ public final class ResultSet extends ResultSetBase {
                 this.rowIndex = null;
                 return false;
             }
-        } catch (SQL4ESException ex) {
+        } catch (CrabsException ex) {
             throw new SQLException(ex.getMessage(), ex);
         }
     }

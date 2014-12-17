@@ -9,7 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import static org.codefamily.crabs.common.Constants.PATTERN_YYYY_MM_DD_HH_MM_SS;
+import static org.codefamily.crabs.Constants.PATTERN_YYYY_MM_DD_HH_MM_SS;
 
 public class TypeDefinitionManagerTest {
 

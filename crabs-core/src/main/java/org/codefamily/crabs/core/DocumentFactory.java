@@ -10,7 +10,7 @@ public final class DocumentFactory {
         // nothing to do.
     }
 
-    public static Document newDocument(final TypeDefinition typeDefinition) {
+    public static Document createDocument(final TypeDefinition typeDefinition) {
         throw new UnsupportedOperationException();
     }
 

@@ -1,6 +1,6 @@
 package org.codefamily.crabs.jdbc;
 
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.BaseClasses.PreparedStatementBase;
 import org.codefamily.crabs.jdbc.ResultSet.InternalResultSetMetaData;
 import org.codefamily.crabs.jdbc.lang.Statement;
@@ -218,7 +218,7 @@ public final class PreparedStatement extends PreparedStatementBase {
         public final int getParameterCount() throws SQLException {
             try {
                 return preparedStatement.statement.getParameterCount();
-            } catch (SQL4ESException ex) {
+            } catch (CrabsException ex) {
                 throw new SQLException(ex.getMessage(), ex);
             }
         }

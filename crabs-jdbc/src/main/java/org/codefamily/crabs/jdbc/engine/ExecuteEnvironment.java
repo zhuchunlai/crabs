@@ -1,11 +1,11 @@
 package org.codefamily.crabs.jdbc.engine;
 
-import org.codefamily.crabs.common.util.TimeCacheMap;
+import org.codefamily.crabs.util.TimeCacheMap;
 import org.codefamily.crabs.core.Identifier;
 import org.codefamily.crabs.core.IndexDefinition;
 import org.codefamily.crabs.core.TypeDefinition;
 import org.codefamily.crabs.core.client.AdvancedClient;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.Protocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +89,7 @@ public final class ExecuteEnvironment implements Closeable {
 
     private IndexDefinition indexDefinition;
 
-    public final IndexDefinition getIndexDefinition() throws SQL4ESException {
+    public final IndexDefinition getIndexDefinition() throws CrabsException {
         if (this.indexDefinition == null) {
             synchronized (this) {
                 if (this.indexDefinition == null) {
@@ -100,7 +100,7 @@ public final class ExecuteEnvironment implements Closeable {
         return this.indexDefinition;
     }
 
-    public final TypeDefinition getTypeDefinition(final Identifier typeIdentifier) throws SQL4ESException {
+    public final TypeDefinition getTypeDefinition(final Identifier typeIdentifier) throws CrabsException {
         TypeDefinition typeDefinition = this.typeDefinitionCache.get(typeIdentifier);
         if (typeDefinition == null) {
             synchronized (this) {

@@ -1,6 +1,6 @@
 package org.codefamily.crabs.jdbc.compiler.extension.statement;
 
-import org.codefamily.crabs.common.util.ReadonlyList;
+import org.codefamily.crabs.util.ReadonlyList;
 import org.codefamily.crabs.jdbc.lang.Clause;
 import org.codefamily.crabs.jdbc.lang.Keyword;
 import org.codefamily.crabs.jdbc.lang.Statement;

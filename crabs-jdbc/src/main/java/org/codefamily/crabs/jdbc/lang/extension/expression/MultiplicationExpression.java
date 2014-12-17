@@ -1,7 +1,7 @@
 package org.codefamily.crabs.jdbc.lang.extension.expression;
 
 import org.codefamily.crabs.core.DataType;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.lang.Expression;
 import org.codefamily.crabs.jdbc.lang.expression.NonAggregation;
 
@@ -19,7 +19,7 @@ public final class MultiplicationExpression extends NonAggregation {
     }
 
     @Override
-    public final DataType getResultType() throws SQL4ESException {
+    public final DataType getResultType() throws CrabsException {
         // TODO 存在浮点运算的问题
         return DataType.LONG;
     }

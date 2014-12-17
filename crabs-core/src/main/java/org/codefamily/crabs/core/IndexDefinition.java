@@ -1,7 +1,7 @@
 package org.codefamily.crabs.core;
 
-import static org.codefamily.crabs.common.Constants.DEFAULT_INDEX_REPLICAS_NUM;
-import static org.codefamily.crabs.common.Constants.DEFAULT_INDEX_SHARDS_NUM;
+import static org.codefamily.crabs.Constants.DEFAULT_INDEX_REPLICAS_NUM;
+import static org.codefamily.crabs.Constants.DEFAULT_INDEX_SHARDS_NUM;
 
 /**
  * 定义elasticsearch中的Index结构
@@ -18,8 +18,8 @@ public final class IndexDefinition {
     private final int replicasNum;
 
     /**
-     * 构造方法，shard数量和replicas数量均采用默认值，具体见{@link org.codefamily.crabs.common.Constants#DEFAULT_INDEX_SHARDS_NUM}和
-     * {@link org.codefamily.crabs.common.Constants#DEFAULT_INDEX_REPLICAS_NUM}
+     * 构造方法，shard数量和replicas数量均采用默认值，具体见{@link org.codefamily.crabs.Constants#DEFAULT_INDEX_SHARDS_NUM}和
+     * {@link org.codefamily.crabs.Constants#DEFAULT_INDEX_REPLICAS_NUM}
      *
      * @param identifier index名称标识
      */

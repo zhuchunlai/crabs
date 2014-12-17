@@ -1,6 +1,6 @@
 package org.codefamily.crabs.jdbc.compiler;
 
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.lang.Statement;
 import org.codefamily.crabs.jdbc.lang.expression.Constant;
 import org.codefamily.crabs.jdbc.lang.expression.Reference;
@@ -204,7 +204,7 @@ public class GrammarAnalyzerTest {
     }
 
     @Test
-    public final void testAnalyzeSelectStatement_OK_Group() throws SQLException, SQL4ESException {
+    public final void testAnalyzeSelectStatement_OK_Group() throws SQLException, CrabsException {
         final String sql = "select id, count(id) from student group by id";
         final Statement actual = GrammarAnalyzer.analyze(sql);
         final Statement expected = new SelectStatement(
@@ -235,7 +235,7 @@ public class GrammarAnalyzerTest {
     }
 
     @Test
-    public final void testAnalyzeSelectStatement_OK_Having() throws SQLException, SQL4ESException {
+    public final void testAnalyzeSelectStatement_OK_Having() throws SQLException, CrabsException {
         final String sql = "select id, count(id), max(score) max_score from student group by class having max_score >= 95";
         final Statement actual = GrammarAnalyzer.analyze(sql);
         final Statement expected = new SelectStatement(
@@ -272,7 +272,7 @@ public class GrammarAnalyzerTest {
     }
 
     @Test
-    public final void testAnalyzeSelectStatement_OK_OrderBy() throws SQLException, SQL4ESException {
+    public final void testAnalyzeSelectStatement_OK_OrderBy() throws SQLException, CrabsException {
         final String sql = "select id, count(id), max(score) max_score from student " +
                 "group by class having max_score >= 95 order by max_score desc";
         final Statement actual = GrammarAnalyzer.analyze(sql);
@@ -313,7 +313,7 @@ public class GrammarAnalyzerTest {
     }
 
     @Test
-    public final void testAnalyzeSelectStatement_OK_Limit() throws SQLException, SQL4ESException {
+    public final void testAnalyzeSelectStatement_OK_Limit() throws SQLException, CrabsException {
         final String sql = "select id, count(id), max(score) max_score from student " +
                 "group by class having max_score >= 95 order by max_score desc " +
                 "limit 0, 10";

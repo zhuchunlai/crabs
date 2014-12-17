@@ -1,11 +1,11 @@
 package org.codefamily.crabs.core;
 
-import org.codefamily.crabs.common.util.ReadonlyList;
-import org.codefamily.crabs.common.util.StringUtils;
 import org.codefamily.crabs.core.exception.FieldAlreadyExistsException;
 import org.codefamily.crabs.core.exception.FieldNotExistsException;
 import org.codefamily.crabs.core.exception.PrimaryFieldAlreadyExistsException;
 import org.codefamily.crabs.core.exception.PrimaryFieldNotFoundException;
+import org.codefamily.crabs.util.ReadonlyList;
+import org.codefamily.crabs.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,10 +1,10 @@
 package org.codefamily.crabs.jdbc;
 
 import org.codefamily.crabs.Product;
-import org.codefamily.crabs.common.util.ReadonlyList;
-import org.codefamily.crabs.common.util.StringUtils;
+import org.codefamily.crabs.util.ReadonlyList;
+import org.codefamily.crabs.util.StringUtils;
 import org.codefamily.crabs.core.client.AdvancedClient.ElasticsearchAddress;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -27,17 +27,17 @@ public final class Protocol {
 
     private static final Properties EMPTY_PROPERTIES = new Properties();
 
-    public static Protocol parseURL(String URL) throws SQL4ESException {
+    public static Protocol parseURL(String URL) throws CrabsException {
         URL = URL.trim().substring(JDBC_PREFIX.length());
         final int slashIndex = URL.indexOf('/');
         if (slashIndex == -1) {
-            throw new SQL4ESException("Invalid URL, expected format is: " + JDBC_URL_FORMAT);
+            throw new CrabsException("Invalid URL, expected format is: " + JDBC_URL_FORMAT);
         }
         final ElasticsearchAddress[] addresses;
         try {
             addresses = ElasticsearchAddress.toElasticsearchAddresses(URL.substring(0, slashIndex));
         } catch (Exception e) {
-            throw new SQL4ESException("Invalid URL, expected format is: " + JDBC_URL_FORMAT);
+            throw new CrabsException("Invalid URL, expected format is: " + JDBC_URL_FORMAT);
         }
         URL = URL.substring(slashIndex + 1);
         final int questionMarkIndex = URL.indexOf('?');
@@ -57,17 +57,17 @@ public final class Protocol {
             for (int index = 0, size = keyValueMappings.length; index < size; index++) {
                 keyValueString = keyValueMappings[index];
                 if (StringUtils.isNullOrEmptyAfterTrim(keyValueString)) {
-                    throw new SQL4ESException("Invalid URL, expected format is: " + JDBC_URL_FORMAT);
+                    throw new CrabsException("Invalid URL, expected format is: " + JDBC_URL_FORMAT);
                 }
                 keyValue = keyValueString.split("=");
                 if (keyValue.length != 2) {
-                    throw new SQL4ESException("Invalid URL, expected format is: " + JDBC_URL_FORMAT);
+                    throw new CrabsException("Invalid URL, expected format is: " + JDBC_URL_FORMAT);
                 }
                 key = keyValue[0];
                 value = keyValue[1];
                 if (StringUtils.isNullOrEmptyAfterTrim(key)
                         || StringUtils.isNullOrEmptyAfterTrim(value)) {
-                    throw new SQL4ESException("Invalid URL, expected format is: " + JDBC_URL_FORMAT);
+                    throw new CrabsException("Invalid URL, expected format is: " + JDBC_URL_FORMAT);
                 }
                 properties.put(keyValue[0].trim(), keyValue[1].trim());
             }

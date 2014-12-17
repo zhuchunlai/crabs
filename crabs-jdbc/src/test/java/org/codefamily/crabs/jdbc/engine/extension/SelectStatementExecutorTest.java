@@ -1,12 +1,12 @@
 package org.codefamily.crabs.jdbc.engine.extension;
 
-import org.codefamily.crabs.common.Constants;
+import org.codefamily.crabs.Constants;
 import org.codefamily.crabs.core.DataType;
 import org.codefamily.crabs.core.Identifier;
 import org.codefamily.crabs.core.IndexDefinition;
 import org.codefamily.crabs.core.TypeDefinition;
 import org.codefamily.crabs.core.client.AdvancedClient;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 import org.codefamily.crabs.jdbc.compiler.GrammarAnalyzer;
 import org.codefamily.crabs.jdbc.engine.ExecuteEngine;
 import org.codefamily.crabs.jdbc.engine.ExecuteEnvironment;
@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
-import static org.codefamily.crabs.common.Constants.PATTERN_YYYY_MM_DD_HH_MM_SS;
+import static org.codefamily.crabs.Constants.PATTERN_YYYY_MM_DD_HH_MM_SS;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -109,7 +109,7 @@ public class SelectStatementExecutorTest {
             );
             try {
                 init(advancedClient);
-            } catch (SQL4ESException e) {
+            } catch (CrabsException e) {
                 throw new RuntimeException(e);
             } finally {
                 try {
@@ -368,7 +368,7 @@ public class SelectStatementExecutorTest {
             return Arrays.asList(data);
         }
 
-        private static void init(final AdvancedClient advancedClient) throws SQL4ESException {
+        private static void init(final AdvancedClient advancedClient) throws CrabsException {
             final IndexDefinition indexDefinition = new IndexDefinition(new Identifier("test"));
             if (!advancedClient.existsIndex(indexDefinition.getIdentifier())) {
                 advancedClient.createIndex(indexDefinition);

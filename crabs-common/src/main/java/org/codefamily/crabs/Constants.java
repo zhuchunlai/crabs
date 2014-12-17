@@ -1,4 +1,4 @@
-package org.codefamily.crabs.common;
+package org.codefamily.crabs;
 
 /**
  * 常量

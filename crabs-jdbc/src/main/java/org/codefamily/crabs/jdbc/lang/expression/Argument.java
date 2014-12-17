@@ -1,10 +1,10 @@
 package org.codefamily.crabs.jdbc.lang.expression;
 
-import org.codefamily.crabs.common.util.ReadonlyList;
+import org.codefamily.crabs.util.ReadonlyList;
 import org.codefamily.crabs.core.DataType;
 import org.codefamily.crabs.jdbc.lang.Expression;
 import org.codefamily.crabs.jdbc.lang.expression.context.Context;
-import org.codefamily.crabs.exception.SQL4ESException;
+import org.codefamily.crabs.exception.CrabsException;
 
 public final class Argument extends Expression {
 
@@ -39,12 +39,12 @@ public final class Argument extends Expression {
     }
 
     @Override
-    public final DataType getResultType() throws SQL4ESException {
+    public final DataType getResultType() throws CrabsException {
         return null;
     }
 
     @Override
-    public final DataType getResultType(final Context context) throws SQL4ESException {
+    public final DataType getResultType(final Context context) throws CrabsException {
         final Object value = context.getArgumentValue(this);
         return DataType.getDataType(value.getClass());
     }
